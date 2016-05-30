@@ -1,0 +1,47 @@
+*** guenomu *** Importance Sampling (IS) for two gene families assuming gene tree is known with certainty.
+
+Example execution of the program (serial version):
+
+$ guenomu run_importance_sampling.ctrl
+$ guenomu analyze_output.ctrl
+
+(parallel version):
+
+$ mpirun -np 4 guenomu run_importance_sampling.ctrl
+$ mpirun -np 4 guenomu analyze_output.ctrl
+
+The output files of interest would be job0.params.txt (with sampled parameters), job0.species.tre (with rooted species
+trees ordered by posterior frequency) and job0.unrooted.tre (species trees by posterior frequency, if we neglect the
+root location and assume the trees are unrooted). Notice that the unrooted trees are still represented as rooted ones,
+please neglect the apparent root location.
+_________
+
+
+This example data set contains two gene families (downloaded from http://www.treefam.org/ and edited), TF354246.tre and
+TF354258.tre, both with only one gene tree per family. This is interpreted as gene family trees known without error --
+the alternative would be several trees per family, with their frequencies representing their relative posterior
+probabilities from sequence-based analysis.
+
+The control file for running the IS analysis under "guenomu" is called  "run_importance_sampling.ctrl", which contains
+the number of iterations for the main MCMC procedure, for the "mini-sampler" of auxiliary gene trees when updating the
+species tree, etc. This control control file also tells that the list of species names is in file  "list_of_species.txt"
+and that the list of gene family tree files is described in "list_of_trees.txt".
+
+The output goes to a checkpoint file in binary format [1], that needs another call to guenomu with the control file
+"analyze_output.ctrl". Notice that this file is exactly the same as "run_importance_sampling.ctrl" but with 
+"param_execute_action = analyse" [2]. If you use the MPI version of the IS sampler, you must also use MPI with the same
+number of processes for analyzing the output.
+
+
+Notes: 
+[1] The checkpoint file is called job0.checkpoint.bin for the serial version and job${i}.checkpoint.bin for the parallel
+version (where $i is the job number). Therefore currently we must use the same parallel parameters when analysing a
+parallel analysis (that is, same number of processes). An alternative (not implemented yet) is to give explicitely the
+checkpoint file names, which can be used to study convergence... (the control file already supports this, but nowadays
+is neglected by program). The MCMC analysis does not need to be completed for these checkpoint files to be read -- since
+they are checkpoints, they are robust to a sudden halt of the analysis. 
+
+[2] In the future I may remove the "execute_action" from the control file and leave it as a command line option so that
+the exact same control file can be used for both. Some parameters do not matter (like number of iterations, prior
+values, etc.) but the species names and list of gene tree must be the same -- unpredictable errors may arise.
+

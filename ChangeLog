@@ -1,0 +1,631 @@
+2013.07.29
+	* BUG: mpi version is not working when nloci < nprocessors (tries to alloc a vector of size zero)
+	* BUG: mpi version does not output all gene trees. E.g. 00.results/20130730.guen (we have gene1.tre but not	job*.gene1.tre) 
+2013.07.09
+	* STEAC, GLASS, MAC, SD: following JComputBiol.2012.632.pdf, we implemented these distance-bsaed methods in the
+	program main_maxtree (which previously worked with alignments, and employed only MaxTree (GLASS)). The four methods
+	differ in how they resolve multiple divergence times for a species pair within the locus and between loci. They can be
+	resolved by chosing the minimum value, or the average value between the alternatives. Each method suggests a
+	clustering -- single-linkage for those that use the minimum among loci and upgma for those that use the avberage. 
+	* patristic distances inside a tree: the distances between all leaf pairs can be calculated very efficiently by using
+	the vector of leaves as they appear in postorder (the Euler tour with leaves only): each internal node can then point
+	to the two vector indices corresp. to the first and last leaves below it. The patristic distances can then be
+	calculated by storing the distances from all nodes to the root node, and using this fast listing of leaves below a
+	node. My version of the algorithm works also for trees without branch lengths (we can use the internodal distances).
+2013.07.08
+	* scaled branch lengths: treespace now stores branch lengths scaled by the total tree length (sum of branches). 
+	The unscaled tree lengths are stored on treespace->tlen[] vector that has 3 consecutive values: the mean, min and max.
+	Notice that this is distinct from branches, where the mean, min and max are not consecutive but the whole vectors
+	'concatenated'.
+	* single-linkage clustering: now the upgma_from_dist() function has a boolean that when TRUE uses the nearest-neighbor
+	or single-linkage or minimum distance, instead of the mean distance (UPGMA) between clusters. This is to emulate STEAC
+	and friends.
+2013.06.10
+	* BUG found and fixed: the user was not able to change lambda_prior[i] for i > 3 (and without control file, we were
+	using the default of 1). Also found one bug affecting MPI where the partition function element would go the wrong
+	index of the mtm lnProb (it should go to 2*m_tries but was going to n_tries)
+	* partition function: dynamic n_mc_samples might not be best approach, unless we start at a distinct tree for the aux
+	gene... (that is, if do not change terms will cancel in exchange algo). For now I removed stochastic choice and left
+	at user-defined value. 
+	* Currently accepted values: until now they were in a special element of the mtm struct (index 2*n_tries-1) but now I
+	created a lnProb_dist_cur and n_dli_cur to store current values -- so that we can use the GMTM idea of making each
+	trial have one distrib (it may use element 2*n_tries-1)
+2013.06.06
+	* argtable: Now the program can work with command-line arguments, and do not need a control file. If both are present,
+	command-line options have precedence. 
+	* distance model: Now the user can decide which distances she wants to consider, by giving a vector of zeroes and
+	ones, like 1110001, which are, in order: (ndups, nloss, ndeepcoals, RF, hdist, hdist_initialcost, SPR) where the SPR
+	is our approx SPR distance (doesn't work well for gene trees much larger than sptrees), and hdist are the edge
+	matching costs we use as we calculate the dSPR. The default is 1111000 and if the user changes it she MUST remember
+	it when asking for the program to analyse the checkpoint file. (This gave me an idea that a True© mixture model would
+	consider all these combinatorial assignments)
+	* mixture deactivated: even with label shuffling (described in 2013.06.02 potential bug) the behaviour was not good
+	since I was sampling new lambda values even when the associated w tended to zero -- that is, anything goes. The w's
+	themselves are known to behave badly and once reach zero are hard to go back (discusesd in Xian book and I think in
+	10.1.1.147.687.pdf which is an expanded version of this book chapter). We could try to sample them directly from
+	gammas but still I don't know how to sample the lambdas when they are in practice "off" by the w's (all books work
+	with the augmented distrib where indicator z tells which mixture element is the active one... maybe I could update in
+	several steps, given each one of the elements, but that's overkill specially considering the exchange algo). So now I
+	just use the multivariate exponential model (e^{d1/l1 + d2/l2 + ...}). Now continuous variables are bound to be larger
+	than INVALID_SMALL (a #define currently at 1.e-9) to avoid zero -- if proposed value is smaller, I simply reject it.
+	* comparison between models: by doing a few simulations using just annealing, the multivariate exponential model gave
+	me much better answer than the mixture -- here I had to set the concentration parameter at 10 and not updating it
+	-- since it will go small values and the W's will become zero except for one. The answer was very similar to iGTP,
+	with iGTP being correct a few more times but in some cases when both failed  my model could find a (wrong but) closer tree.
+	I need to redo this analysis since I was not scaling the distances (diving by nleaves).
+2013.06.02
+	* Simulated annealing: given final 1/kT = F, initial 1/kT = I, and number of iterations = N, the temperature is given
+	by "I + (F-I) * log(n)/log(N)" at iteration n>0. It's possible to run only simulated annealing (by letting n_iter=0)
+	and furthermore have several "samples" (that is cycles starting at n=1 to n=N) that will be saved to checkpoint file
+	when n_iter=0. (if n_iter>0 then we don't save it to avoid messing with the posterior distrib). Implemented only for
+	IS, which now also have burnin period (previous versions before 2013.06 neglected burnin). It's possible but dummy to
+	have initial 1/kT higher than final -- if one wants dispersed initial values for the real Bayesian, since SA messes with 
+	that, then one might let both final and initial 1/kT be lower than 1 (let's say I=0.001 and F=0.1, with e.g. N=1). At
+	each cycle (defined by ctrl->sa_n_samples) the perturbation parameter of continuous variables is increased according
+	to "Pn = P0 X alpha^n" where n is the cycle -- so we fix the final parameter P_N to be 10 times the initial one.
+	The user can set n_iter=0 to run only the simulated annealing -- many times according to sa_n_samples, each time 
+	saving the final result.
+	* dynamic n_mc_samples: the chain length for the secondary MCMC, responsible for the auxiliary gene tree sampling, is
+	now variable in the main sampler (between 1 and the value chosen by the user). On the burnin this number is half the
+	defined by user, and in the annealing this number is zero -- that is, the partition function is not taken into account.
+	The user can also define n_mc_samples=0, in which case the whole program neglects the partition function. 
+	* truncated exponential: specially when n_mc_samples=0, we might want to have our unnormalized distrib as close as possible 
+	to a normalized one. Looking at my old notes I now include the truncation term for the exponential distrib, which is
+	equal to [1-e(-MAX/lambda)] on the denominator. In our case we don't know MAX but we assume it's close to one (since
+	we divide n_dli[] by dli_max[]). I haven't noticed any change (actually I included it since the lambdas were exploding
+	due to a bug when n_mc_samples=0, that I discovered and fixed only afterwards...) <-- REMOVED on 2013.06.04 since
+	don't seem to change anything, the problem with large negative values for log(prob) was related to very small lambdas
+	and weights (which is now fixed by rejecting tiny values, and removal of troublesome mixture distribution).
+	* potential BUG: the weights are not moving well -- in example 20130423.example_to_test_spr/00.easy, once one of them
+	is one and the others are ~zero, they don't move. Need to create other proposals (from gammas?) since we expect them
+	to change even for a very low concentration parameter. And the acceptance ratio is high, which means that they are
+	accepting silly moves that do not explore the space. FIXED 2013.06.03: it was the same bug when n_mc_samples=0; I
+	included an index shuffle nonetheless to allow for weights being exchanged between mixture elements.
+2013.05.30
+	* TODO: 
+		1) make the program work with newick trees (ideally even several trees per file, and with only species names). This
+		is after looking at Rokas data set (1070 yeast gene trees)
+		2) use SPR distance: check if leaves are bijective, and use faster or slower, or even use hdist when not
+		bijective;
+		3) allow for the user to decide the mixture model
+		4) check influence of partition function -- that is, use unnormalized probs (double check if dist prob function is
+		as close as possible to normalized, at least).
+		4a) Try different scalings, and then replace regular exp by truncated exp or geometric function
+		5) create "annealing" mode, to find optima instead of regular Bayesian analysis; chang econtrol file and add prompt options
+		6) create convergence functions, summarize from several runs (implies adding pid to outputs)
+		7) add upgma-like tree error generator 
+		8) on mcmc_update_chain() (or something) add "exploratory" parameter to allow for more bold moves, maybe without the
+		exchange update for the partition function. This "exploratory" should be used in simulated annealing (not real
+		Bayesian). 
+		9) think about alternative proposals for the mixture weights, that are getting stuck (see potential bug on 2013.06.02). 
+2013.05.18
+	* MPI: paralell version of the guenomu program now available with autoconf option "--enable-mpi". The parallelization
+	works by each job using a subset of gene families, and communicating only when updating common parameters like species
+	tree and reconciliation parameters. It's an improvement over the serial version when there are many gene families or a
+	few large ones. In any case, each job will receive the same number of gene families, and there should be more families
+	than jobs. When analysing the output, the parallel program should be invoked with the same number of jobs -- such that
+	each job can analyze a checkpoint file for the same gene families. The output files wil lhave some redundant
+	information like species trees. The ideal would be to partition the gene families s.t. each job would spend almost the
+	same time per iteration, even if the number of gene families per jobs varied wildly, but it seems that this problem is
+	not so easy to solve. We order the gene families by size, so we at least send the largest ones to different jobs.
+	* mixing of a chain: The problem I reported previously about the program not moving might be a "feature" of the model:
+	In the data set I studied I had the same family tree "repeated" which makes the posterior distribution very sharp.
+	With treefam data sets I didn't observe this problem, and guenomu finds the same trees as iGTP -- besides showing
+	other possible species trees. GMTM still "stops moving" after it finds a good tree, even if it other proposals do
+	change the species tree...
+2013.05.07
+	* SPR move: there was a bug with the unrooted SPR for the 4 taxa case, to which I added an exception. I discovered
+	when analyzing treefam data base. BTW the program is very slow and stalls after a local optimum is found. (global?
+	must compare to iGTP at least).
+	* GMTM sptree move: we can apply an "general" MTM for species trees since we don't need to sample auxGenetree for
+	every trial -- they'll cancel out and we just need to sample from the proposed sptree and compare it to the current
+	sptree. Furthermore if we have our weight function proportional to the unscaled P(G/S) we can simplify a bit more.
+	Remember that the weight doesn't need to be a prob distribution, can be any measure -- provided it will help and not
+	disturb the choice of good values...
+	* BUG: the program stops moving (species trees are reject), as described above, and for GMTM it happens much sooner. I
+	also found (and fixed) a bug on the concentration parameter update: it was not taking into account wb[] -- that is, it
+	was data-free... maybe because it's a term like (wa'-1) X sum_i( log(wb[i]) ) -- and I concluded that the sum was
+	equal to one...
+	* Nmixt: Now we have two global variables (#define actually): Ndist for the distances and Nmixt for the mixture terms.
+	That's because the mixture term duploss depends on two distances, dups and losses (it makes no sense separate those).
+	Each distance still has its lambda, though. 
+2013.04.29
+	* Dirichlet mixture: implemented a "scaled" version where weights are constrained to sum up to one -- but constrain is
+	not on model (at first they could add to something other than one, they are just one term in log, and in the end the
+	exchange algo cancel them out), but on proposal of new state. This way a term like the Det of the Jacobian appears
+	-- sum of betas elevated to the dimension -- but refer to proposal, and are not heated. 
+	* sptree move: in a particular simulation, the chain was stuck in a (global?) optimal sptree, therefore I devised a
+	more audatious branch swap -- the same as the one used in addTreeNoise.c, but now every branch has the same
+	probability of change. The algo traverses the tree while tries to swaps all branches acc to this probability, that
+	increases in case no swap is done, until successful. --> On this data set this new function didn't work, now I'm
+	checking to see if it's a bug, bad model or what.
+	* other changes: now the number of dimensions is given by Ndist, and by changing it we can easily include/exclude more
+	distances -- exception to stdout functions? Concentration parameters (one per gene, controling Dirichlet) are also
+	updated, I don't think that updating their prior is also necessary (it would be just an Exp[], but allowing
+	concentration parameters too low might not be wise -- LogNormal[] maybe?) Although P(G/S) is unscaled and needs an
+	exchange algo, I decided to include the 1/lambda (from exp(x/lambda/lambda of the exponential distrib) just to keep
+	the prob values within bounds (not too far away from one) and therefore do not lose precision. No function from
+	mcmc_proposal.c should have access to the distance calculations or original distance parameters -- they should receive
+	them from store_gene_sptree_distances() of mcmc_common.c . That is, what the distances mean should be opaque to the
+	proposal functions. And the probability should come only from prob_term_prior_dist_from_vectors() or prob_term_prior_dist().
+2013.04.25
+	* Dirichlet mixture: Now I'm implementing a Dirichlet mixture of distances -- where I model the weights by using that
+	their unnormalized versions follow a gamma with common alpha (concentration parameter, one per gene), and a dummy
+	beta, that does not appear in the resulting Dir(), and can be e.g. =1.
+	* bug found but not fixed since affect legacy model: In the previous, non-mixture version I found a problem in mcmc_update_reconciliation_lambda()
+	since it updates chain->mtm->lnPrior_dist[current][n_gene] = chain->mtm->lnPrior_dist[0][n_gene] but [0] was not being
+	calculated... I didn't fix it because we are moving to a mixture, it will be relevant only if someone wants to use the
+	previous version (between 04.07 and 04.21 let's say?). 
+2013.04.21
+	* bugs fixed: previous versions were not calculating properly the exchange algorithm in update_lambda() -- the lines
+	were commented out, and when included led to a segfault after long runs. The culprit was a malformed tree (internal
+	node without children), which pointed to a problem with the topol_int[] and n_dli[][] vectors, consecutive in memory
+	and therefore might be overwritting one another. OTOH I checked with very longer vector sizes and the problem
+	remained -- this may haunt us in the future. The solution was to never use the exchange algo as log(probA) - log (probB), 
+	but as log (probA/probB) since some terms can be cancelled out -- e.g. the distances should be treated as diffs
+	whenever possible...
+	We should also be careful with the tree->index vector, since it is used by spr_unrooted() and
+	therefore cannot be used to store topology information. I also found a bug in the mtm_ratio(), since it might due to
+	roudoff errors return an index larger than the mtm[] matrix.
+	* todo: 1) update the counters (global vars), since they are very outdated, from the first non-IS algorithm. 2) Include SPR
+	in the algorithm. 3) Create global (to the mcmc_proposal.c file) vectors to avoid malloc overhead (but a gprof showed
+	that the slowest part is the has_mix() function, together with other update_topol() and then the DLI distance
+	calculation.) 4) avoid whenever possible calculating the whole probability, preferring the probability ratios -- since
+	many terms can cancel out and we focus just on terms that will differ. 
+	* DONE (04.22): (1) and (2) from above. (3) might not be needed (not now, at least). (4) is constant vigilance. 
+2013.04.17
+	* hungarian method: implemented, and used to match edges from one tree to another. Haven't tested with gene/species
+	trees, only with same leafset trees. I tried several scalings over this optimal cost, no one very good. At my machine
+	at home I have the impression that the values (optimal match costs) are lower than at the lab...
+	The optimal matching can also restrict the disagreement comparisons -- instead of
+	N^2 disagreement splits for all possible combinations we have only N, which corresponds to the optimal matching. The
+	calculation becomes much faster (let's say 4 times faster for 63 leaves), and the performance is almost the same
+	-- maybe a little higher variance around the true value. (due to a bg in the hungarian algo, I concluded at some point
+	that the matching might not be so good. I was wrong, and the bug is solved.)
+	* SPR improvement: in function split_find_small_agreement(), we use now bipartition_contains_bits() to check if prune
+	bipartition belongs to same side of tree or to distinct sides. That is, we check if it corresponds to one SPR or two,
+	and increase SPR counter accordingly. It seems to improve calculation in any circumstance, specially for large values
+	of applied SPR -- at the cost of some	overestimation which didn't happen before. A good compromise is to have these
+	extra SPRs counted in a separate variable (split->spr_extra) and then the function calling the SPR distance can handle
+	-- use split->spr or split->spr+split->spr_extra or even split->spr+split->spr_extra/2 . 
+2013.04.07
+	* DONE: implemented the (simple) dSPR calculation from the recomb program biomc2. Its improvement is that it can
+	handle arbitrary number of leaves (and not 64 as before). 
+		- there are some changes, that I think were not important in biomc2: disagreement calculation is done at once (we
+		have "flip bits to smaller set" function now), so we don't store only disagreements with size <= total/2; we also
+		don't replace leafpair[0] and leafpair[1] in subtree compress function since this looks redundant (they have same
+		info, that's why they are on agree[])
+		- I haven't compared with prev program (it was compiled for debug, which prints too much garbage; the new version
+		uses a single tree file), but the SPR numbers look a wit small. (e.g. on random 10 taxa trees the max was dSPR=5.)
+	* other additions: pair of hash values for each tree, calculated on topology_traversal() -- there still might be
+	collisions even though we have two values... Another thing is an idea from Klaus to simulate error trees: for a given
+	tree, add noise to its cophenetic distances and then estimate the tree from this noisy matrix (UPGMA?).
+	* TODO: the objective is to implement an extended dSPR for mul-trees, like the extended RF where the species tree is
+	expanded to have several leaves for each duplicated species on gene tree. (but for dSPR maybe we should recreate the
+	subtree spanned by each species on gene tree, instead of assuming a multifurcation. Otherwise they won't be recognized
+	as agreement cherries (those that can be reduced on trees) )
+	* FIXME (not urgent): tree reading becomes slow for more than ~10e5 trees since each new tree must be compared to all
+	others present. A quick solution is to use something like a hash table -- we already calculate the hash values, that
+	can be used "as is" by our already implemented hash table, or by a binary tree. 
+2013.03.24
+	* cleanup: current "guenomu/src" directory is a cleaned up version -- do not use LnL or alignments; Also do not use a
+	sptree file, only needs the gene tree files
+	* DONE: read topologies with branch lengths, annotating their distribution (mean, min, max). This implies in
+	removing blen info from node and including as a vector on topol. Be carefull since tree printing functions must
+	change.
+	* DONE (2013.03.26): addTreeNoise executable, which sues branch lengths to decide which nodes to swap. Also added a
+	general branch swap function that recursively swaps (technically a SPR, but looks like a NNI since always sibling
+	branches) branches up on the tree, using a "prob" vector of change (from the branch lengths). By manipulating this
+	vectors (with zeroes and ones, for instance) we can create a general tree modifier algo. 
+	* TODO: create read_topology_space_unrooted(), which calls rooted version and then reduces to those leading to
+	distinct unrooted. (I mean, rooted and unrooted refer to assuming two trees are equal or not; currently the same tree
+	with distinct rootings is considered distinct...)
+2013.02.28
+	* BUG fixed: normalization constant of the MC approx was not using last term of the triplet "dli"
+	* BUG fixed: read_topology_space() function was using wrong scaling for case where tree file doesn't have [ &W ] style
+	frequency info (instead of dividing over over all ntrees, it was dividing over ndistinct, which might be smaller.
+2012.10.02
+	* Doing now: exchange algorithm, which implies in having space for auxiliary gene tree (several, for the case of MTM).
+	No need to calculate likelihood (in the future), but we should start thinking about "regular" gene tree updates in
+	MTM, currently only simple MH and minisampler are allowed. For exchange, all species trees are allowed so revert
+	changes that assume vector of possible sprees. 
+	* TODO: remove reroot option for gene trees (this was before we can handle optimal rooting); rewrite data reading
+	function (that now depends on alignment): allow for alignment to be read at last, and assume leaf names come from
+	trees (unless it's not found, in which case search for it in alignment?). 
+2012.09.22 Leo Martins
+	* DONE from 2012.09.20: working with ILS (under the MC integration algorithm): now all functions -- including exp
+	penalty function -- use dups, losses, and deepcoals (=ils). We must be careful with interpretation: large values for
+	lambda_prior for a given distance  mean that we must relax the penalty to work, that is, that probably the model
+	cannot be adequately explained by this distance: the underlying factor might be the other distances with higher
+	penalties (= lower lambdas). This is confusing since we are tempted to understand the lambdas as "weights" (the higher
+	it is, the more important; while the opposite is true). And we should also look for the _lower_ values of distances of
+	likely explanations: for instance gene trees simulated under ILS will show dli vector = [5,0,0] which means that it
+	can be explained by 5 dups and 0 losses OR by 0 deepcoals (when reading that, we can discard duplosses <-- neglecting
+	composite cases). 
+2012.09.20 Leo Martins
+	* fix: the "bug" commented below (20120713) is fixed -- now we have a vector called dli with distance triplet
+	preceeded by its frequency: [freq, dups, loss, ils] where all values are smaller than one. This vector is stored in
+	one dimension (using dli[4*i + j] notation)
+	* TODO: program is ready to work with ILS; we should simplify structures to work with dli[] vector instead of dups[]
+	and loss[] --> this way we can store other values as well, like an extended RF etc. 
+	* TODO: for small data sets MC integration might be fair -- e.g. for 5 taxa sptree and 10 leaves gene tree, we have
+	around 31 distinct triplet configurations that can be adequately approximated by empirical histograms. But for large
+	trees (e.g. 100s of leaves) the number of terms (and pre-calculations) may become huge. In this case our hope is that
+	the MCMC approx to the exchange algorithm (e.g. from http://arxiv.org/abs/1007.5192) behaves faster. When updating a
+	species tree or the lambda vector, sample the gene trees (maybe in parallel) through a second, auxiliary MCMC chain.
+	The parallelization will be handy when calculating lnl since it will decrease the granularity of comm between nodes.
+2012.07.13 Leo Martins
+	* TODO: check and fix if some species is absent from the gene family -- sptree will be smaller; reconciliation must
+	check (maybe with a flag on each node? <-- may be partially done for current ILS)
+	* TODO: prepare program to do fully unscalled sampling (all possible sptrees), to find possible states on tree spaces
+	-- sptree obviously but also if we want to do hierarchical tree structures (like locus tree). In this case chain
+	should be heated (more permissive). 
+	* idea: create categories/classes for sptrees if they span same histogram of duplosscoals or not
+	* obs: our normalization factor is a "partition function", and should sum over all possible configurations: in case of
+	duplosscoal each state is a triplet [dups, loss, ils]; in case of HGT is all partitionings, e.g. if there are 3 gene
+	families, then [0,0,0],[0,0,1],...,[n,n,n]. It's a lot of terms. We can create	bins like in histogram where similar
+	vectors are counted as one, or restrict possible lambdas over a grid -- maybe rescale all distance values to be
+	smaller than one.
+	* obs: ILS = LOSS - 2 x DUPS + 2 x |diff in number of leaves between gene and sp trees *after* sptree is reduced|
+	* bug: current version calculates duploss prob partition function assuming P(dups) x P(loss), that is we calculate
+	Z(dups) and Z(loss) separately, but actually dups and loss are not independent, so we should have 
+	Z(dups,loss) = \sum_{v} exp(-v_d/lambda_d - v_l/lambda_l)  where v = [dups, loss] is a vector (one vector per gene
+	tree).
+2012.06.16 Leo Martins
+	* bug: found a stupid bug in the normalization constant calculation: it should be {log(freq_i) - dist_i/lambda} and
+	not {-log(freq_i)*(dist_i/lambda)}. Ironically, because if this the program was wrongly capable of correctly finding
+	the sptree if we only have one gene tree: the problem of using IS trees to calc the normalization is that if there's
+	only one IS tree then the normalization does not work. Or if the IS trees are not a good sample in general. The
+	distrib of distances should be a good approximation even if the importance space is reduced, since even in this
+	reduced space the distances should mean something -- e.g. we only know that the gene trees are close to the sptree b/c
+	there are other gene trees that are far apart. 
+	* empfreq: now the empfreq structure has an "empfreq_double" version, with same info as "regular" elements (vector i[]) but
+	scaled to one *and* taken the log of. That is, if the sum of all freqs (total number of original elements before
+	empfreq) is sum_freq, then each element logfreq[i] is log( freq[i]/sum_freq). This empfreq_double is actually just a
+	pair of vectors, cannot be manipulated (we don't have empfreq_elements that can be smartly sorted, keeping idx), but
+	economize space. It's a "read-only" solution -- but we do change the idx[] vector when we scale dups and losses to be
+	between zero and one.
+	* min/max distances: up to now the hyperprior on #losses is #leaves X #dups, but it might be better to use empirically 
+	determined max/min numbers (not my favorite) or better yet, standardize all values to be smaller than one so that lambdas 
+	have same magnitude. (the non-scaled values should be kept in algos and reported to user though). I am trying with min
+	equal to zero (forced by hand) or equal to minimum found in MC integration of normalization factor. The problem is
+	when the sampled min is not the true min -- that can be found later in the simulation -- b/c we will have a
+	standardized value lower than zero (standardization -> x-min/(max-min) )
+2012.06.15 Leo Martins
+	* IS already works: but it would be best if we separate the IS trees from the normalization trees (that should be an
+	expansion of the former). "Best" means more general, but the justification for letting only IS trees is sound: we want
+	to work in a space with only the "likely" trees (that is, the contribution of each one *within* this restricted
+	space).
+	* simulation under ILS: even if I give only one tree for each gene family, and it has zero ILSs, the IS will find the
+	species tree but get lost at the rooting (it will find all rootings equaly likely, since our duploss model won't give
+	zero dups and losses). Then I realized that this problem was already present in the previous version (presented at
+	DMP2011), and I solved it by not applying branch swappings that would change the rooting -- that is, I assumed that we
+	knew the root position. When I gave more than one importance tree per gene family, then the results were worse --
+	partly because the post distrib of gene trees will become flatter than the importance weights used as input (the
+	opposite of BUCKy where the post ditrib becomes more concentrated), since other trees (and lax rooting?) will
+	influence it.
+
+2012.06.14 Leo Martins
+	* importance sampling: tree file with all possible species trees must be given -- it is the last one on the list of
+	tree file names. This allows to precalculate the distribution of #dups and #losses for each sptree (this distrib will
+	be specific to each gene family). Therefore this version is (temporarily?) unable to do branch swaps on species trees.
+	We can think about ways of insuring that all reasonable sptrees are represented (e.g. using other progs to estimate
+	good values and randomize them). It is tempting to simulate gene trees from the prior (to obtain the reasonable
+	space), but only if we knew the true species tree! 
+	* tree files: the tree files may be better used in the future: one collection of the IS (where frequency of each tree
+	matters), and another for the normalization constant calculation (frequencies are irrelevant, but must be a good
+	sample of possible values). Right now the same files are used for both. For each sptree and gene family, we have an
+	empfreq (structure with "index" and "frequency", emulating a histogram) so that we don't need to store _all_ gene
+	trees distances -- although this would be useful to speed up reconciliation calcs a lot, where not for the memory
+	problem... Furthermore the tree files can be further compacted (in topology_space) if we keep only distinct *unrooted*
+	gene trees (nowadays we compare only the rooted versions, s.t. in the end we might have the same (unrooted) tree
+	represented twice b/c of rooting -> not a problem, just a waste). 
+	* bug: in previous versions (including the one shown at DMP2011) the importance sampling was chosing the wrong tree:
+	instead of copying the treespace->distinct[j] (from the discretely sampled j), is was copying treespace->tree[j] --
+	that is, using the longer vector. The IDs by chance were the same, but this could be a problem when there are a lot of
+	duplicates (e.g. a non-flat IS of trees). I run one analysis and didn't notice anything weird -- our program, even w/
+	the bug, worked well for "sharp" gene tree distributions (where the bug fix would be felt), and worked bad for flat
+	distribs with almost all gene trees distinct (in which case the bug didn't affect results). The "guenomu" directory is
+	fixed, as well as the "guenomu-IS".
+	* TODO: gene_species can be simplified if we only use IS. Exception is to sample from prior (simulate gene trees),
+	where we do not use IS info (just to compute empfreq) and apply branch swapping. (In hindsinght, this is our only
+	mechanism for diversity generation that does not depend from other programs...)
+	* TODO: even if we are not using IS, we can approximate the empfreq of distances for each species tree and gene family
+	provided, as before, that all possible sptrees are given in advance. This can be done by simulating gene trees online,
+	beforehand. (the drawback is the construction of of the emnpfreq itself, that need a complete (not online) vector of
+	dists.)
+2011.10.21 Leo Martins
+	* WARNING: as you can see this file is not being properly updated since now we are using mercurial (and before that,
+	svn) to note down. Just to recapitulate, the program works with importance sampling, and can even simulate from the
+	prior. But (as shown in DMP2011 in Munich) we must take care of the normalization constant -- which is dependent on
+	the species tree, and must be summed up over all gene trees. Now I'm creating a quasi-random mechanism to calculate
+	the sum using Monte Carlo (I think they call this quasi-Monte Carlo). The approach is to sample trees that even if not
+	random can spread over all cases.
+	* other changes (that I can remember): the program bmc2_tree is tailored for this problem with the normalization
+	constant. For "small" datasets (let's say, up to 8 taxa on the gene tree) it can: (given one parameter) simulate many
+	trees and compare how many times it samples from the "expected" ones (given be the gene tree file); (given two params)
+	calculated all dups and losses between all possible combinations of trees; (given three params) calc all possibilities
+	like before -- so the files should have the whole set of trees -- and then simulate to see how the histograms of dups
+	and losses approach the expected ones (based on the mean squared error between histograms). 
+2010.07.21 Leo
+  * summary of old changes: I stopped using this changelog always, now I make more notes on snv. The current version
+    calculates the minimum number (over genetree) of dups between gene and species tree; that is, it "finds" the optimal
+    root point on gene tree; therefore maybe the gene tree can be unrooted (in the structs as well), but we might want
+    to change it later. The SPR also is root-aware, and the user can opt for rerooting and topol change (works well
+    combined with prior simulation);
+  * mcmc_chain_proposal: I found a mistake in MTM calculations: the weight function has a proposal term related to
+    *previous* param value. That is, w(y) = pi(y) X P(x/y) where x is current and y is proposed value. And since 
+    P(x/y)=1/(zeta * x) for continous value perturbation (notice that it depends on old x, not new y) then the
+    model.lnProb_XXX terms might be useless. We need to recalculate them, depending on "previous" value (furthermore we
+    cannot calculate it before the first iteration...)
+
+2010.04.08 Leo Martins
+  * checkpoint_file: now has summary_struct structure to summarize binary file info (can handle only the topol-related
+    info right now, it should be easy to extend to params (double) info as well). It counts the freq of each topol and
+    prints like mrbayes.trprobs 
+  * TODO: 
+    - in main_resume_sampling() from main.c, call main_start_sampling() if binary does not exist - instead of
+    failing with biomcmc_fopen;
+    - the trprobs-like output files should be ordered from most to less frequent topols (using empfreq functions);
+    - create welcome message with prog/author name, GPL and version
+2010.04.05 Leo Martins
+  * checkpoint_file: now ctrl->checkpoint_filenames is not respected since initalize_binary_file() is called from
+    new_mcmc_chain_from_control_file() and thus always have name "genCheckPoint.bin"; afterwards we must biomcmc_fopen()
+
+
+2009.09.14 Leonardo de Oliveira Martins (leomrtns at gmail dot com)
+  * old note: if traversal_updated is slow, try pointer rings like in lk_vector (so that rejection just reverts to old 
+    values) in topology_common.c
+  * guenomu.v0.2: no big changes, it's more to reflect xcode and eclipse trials. New features (not functional as of
+    writing):
+    - changepoint structure: binary file with topology info, planned to be the standard output format;
+    - control_file: input file with alignments, checkpoints and speceis names info: also controls how checkpoints should
+      be used (to summarize posterior distribution or resume previously halted sampling);
+    - deep coalescence algorithm, following Nakhleh and using politomies when several gene copies present (just algo,
+      not Bayesian model);
+  * TODO: alignment format FASTQ seems promising, with quality represented by ascii values between 33 and 126 (sanger
+    standard)
+
+
+2009.09.07 Leonardo de Oliveira Martins (leomrtns at gmail dot com)
+  * deep coal TODO (cont.): The paper described below (MPE.1997.349) is incomplete in that: it doesn't describe that the
+    "extra nodes" on sptree for duplicates should follow the ordering of the leaves in genetree; it does not explain how
+    to calculate the weights of the coalescences (the weigthed version is the number of deep coals, otherwise is wrong);
+    My answer: for each unmapped sptree node, do an _inverse_mapping_ - the lca mapping between this node (provided
+    we know the genes it refers to) and the genetree - and count the path between the unmapped sptree node and the
+    sptree mapping of the inverse-mapped genetree node. The easy way, without directy doing the reverse mapping:
+    - when mapping genetree node --> sptree node, associate a bipartition (of gene size) to this sptree node with the
+      genetree->node->bp (leaves); if several genetree nodes map to same sptree node, accumulate (bipartition_OR()) the
+      leaves on sptree node.
+    - after finishing the mapping, postorder-search the sptree nodes which weren't mapped (=empty bipartitions) and, for
+      each, climb up the tree until we find a mapped node (in sptree, naturally) containing all genetree leaves spanned
+      by the unmapped sptree node (e.g. for an unmapped node (A,B) we search for the sptree node with bipartition
+      containing  A1,A2,..,An,B1,...,Bm). The path size is the number of deep coals for this node. 
+    - Problem: duplicates => the extra nodes in sptree should follow the original branching pattern in genetree (or
+      not?); missing species can be treated "easily" as described yesterday.
+    Alternative implementation (following ThanNakhleh.PLoSCP09, page 9):
+    - For each sptree->node we have that the number of species is given by sptree-node->bp->n_ones, which would be the
+      number of lineages leaving (to the past) sptree->node; but we have coalescences going on below (to the present)
+      or _on_ this node (through the mapping; remember that mapping to a node means the coalescence happened before (up
+      to the root) but before the parent node).
+    - thus the number of extra lineages leaving (from to present to past; for us a node refers to branch above it) 
+      sptree->node is equal to "sptree->node->bp->n_ones - #coal(node) - 1"
+      where #coal is accumulated in postorder, and includes genetree nodes mapping to sptree->node. (maybe in practice
+      is enough to calc this only for unmapped sptree nodes).
+2009.09.06 Leonardo de Oliveira Martins (leomrtns at gmail dot com)
+  * topology_mrca.*: TODO
+  - to calc deep coalescence, see MolPhylogEvol.1997.349 (Slowinski, Knight and Rooney). The number of deepcoal is 
+    number of nodes in "embedded" species tree which are not mapped by any node in gene tree. The embedding means that
+    species absent in gene tree are removed and artificial nodes in sptree are created for dup species. They don't 
+    mention but I assume that these artificial nodes should follow as closely as possible the equiv. nodes in the gene
+    tree (e.g. ((A1,A2),(A3,A4)) in gene tree should span ((A,A),(A,A)) on species tree so that all internal nodes are
+    mapped). In practice - NEGLECTING the possible absence of species in gene - these duplicate genes mean creating a 
+    vector with counts of the representativity of each species tree node: internal nodes have a count of one and if
+    mapped by the gene tree are decreased to zero; leaves have a count of the number of duplicates in gene tree (in
+    example above leaf "A" of sptree should have a count of 4) and then each time a gene tree node searches for a leaf
+    lca mapping the counting decreases by one (e.g. internal node (A1,A2) above will decrease the count of leaf "A").
+    The number of deepcoal will be given by the sum of the elements in this vector.
+    If we have a species without any representative in gene tree, it becomes more complicated since we must prune the
+    species subtrees with these species (the corresponding vector elements should not be counted). Solution: exclusion
+    flag in preorder: leaves have flag 0 (present) or 2 (absent); internal nodes have flag 0 (present), 1 (absent but
+    don't remove parent node since one child is present), 2 (remove since both children are excluded; parent is eligible
+    for removal). In hindsight, this flag is the number of flag-2  children (maybe?).
+  - The above solution can also be used as a general algorithm to remove subtrees (like the recomb detection algorithm
+    in biomc2 does, using the bipartitions);
+
+2009.09.04 Leonardo de Oliveira Martins (leomrtns at gmail dot com)
+  * src/control_file.*: TODO 
+  - create char_vector for checkpoint files and alignment files with the names of files; 
+  - checkpoint file will actually have the names of checkpoint files; can be updated by sampler (so that user doesn't
+    need to handle it;
+  - control file needs a parameter run_mode (resume, start or analyse) that tells how to use the checkpoint files: when
+    resuming append over last checkpoint, when starting creates a new checkpoint and when analysing use all checkpoints;
+  - char_vector for species_names can read the file with species names (unlike the previous char_vectors that will have
+    only info about _file_names_);
+  - n_samples or similar should depend on time it takes for one iteration (so that we know beforehand how often to save
+    checkpoint to disk). This info should not be on control_file but in the chain (since changes from gene to gene  - on
+    MPI environments this means different machines);
+
+2009.08.28 Leonardo de Oliveira Martins (leomrtns at gmail dot com)
+  * src/mcmc_chain_proposal.*: TODO: proposal functions should update random_number; MPI should send lnProb (REDUCE (sum) 
+    of logs); I don't backup the reconciliation mappings since we recalculate it - the only value we store is the current
+    n_dups for each gene. If a profile show us that this calc is slow we must do a smart mapping updating only changed
+    values (using d_done); We use dpois() since it avoids underflows but maybe the lngamma() function would be enough
+    - profiling will tell us if it's needed.
+  * src/mcmc_chain_common.*: several parameters are hard-coded, we must change it after defining input file format; one
+    big ugly function new_mcmc_chain_from_filenames does everything: initializes phylogenies, calcs initial likelihoods
+    etc.
+
+2009.08.19 Leonardo de Oliveira Martins (leomrtns at gmail dot com)
+  * random idea: a topology (using our structure) can be compactly stored within just one vector of integers, the parent
+  IDs. To make them unique we can use the mid[0] (postorder index) plus nleaves. By uniqueness I mean two instances
+  representing same topology sould have same vector. The vector is of size nnodes. This can be used to store in disk a
+  lot of trees or keep track of best trees. Since a tree with 1024 leaves have less than 2048 nodes (numbered from 0 to
+  2045 actually) each element of the vector can be stored in a "short int" (thus a uint_64 can store 4 elements!). It is
+  also a good way of MPI-sending a topology...
+  * random idea: when working with codons, create a bidim matrix of variable size (just like char_vector) where for 
+    each triplet 0 <= tri < 64 we have a vector of possible neighbours. Ex: the nonzero elements of Q matrix from AAA 
+    are only .AA, A.A and AA (only 12 elems instead of 64). This bidim matrix would be used in likelihood (s1 and s2 
+    variables, according to current implementation). Another options is to calculate "on the fly" these eligible 
+    elements using the binary notation of bases (and codons), maybe using a mask - I don't know the details yet.
+
+2009.08.19 Leonardo de Oliveira Martins (leomrtns at gmail dot com)
+  * likelihood.*: So far we have only the simplest function, based only on "down" nodes (left and right), using 
+    "current" ring elements, for all "postorder" nodes. In the real MCMC we must: 1) use "up" nodes (up and sister) when
+    accepting  a move; 2) distinguish between "accepted" and "current" ring elements, and 3) use only "undone" nodes
+    when  necessary. Notice that the functions we use here (ln_likelihood() ) are not used in original biomc2: they use
+    only  _moved_branches() that distinguish between "accepted" and "current" and works on a vector of phylogenies
+    - topology  moves - and _proposal() which is used when updating model parameters (thus proposal->accepted without
+    "current").
+  * likelihood.c: must check for underflows, possibly using biomcmc_logspace_add() functions. Also decide if calcs should 
+    be done in log scale. UPDATE 2009.08.20: the marginal likelihood over discretized rates uses logspace_add() but only
+    one rate contributes to likelihood (the difference in logLiks is of the order 100, so logLik[cat 1] + logLik[cat 2]
+    = logLik[cat 1] ). Ziheng (JMolEvol.2000.423) describes Hiro's recurrent hint which is the base for logspace_add(),
+    in the context of node scaling (pp 426). Basically at every 50th depth node we reescale all partial likelihoods (for
+    a given rate category). IOW, for this elected node we divide all site/pattern likelihoods (which I assume are not 
+    in log scale) by the maximum value (over sites/patterns) and then store this maximum value, which will be added (in
+    log scale) to the final likelihood for each site. 
+
+2009.08.19 Leonardo de Oliveira Martins (leomrtns at gmail dot com)
+  * phylogeny.*: How the likelihood matrix is organized:
+    phy->l[node]->d[cycle]->lk[cat][pat][state]   (where "d" is for "down" and we also have "u" for "up"
+    * node: 0 <= node < ntax are the leaves (one cycle) and ntax <= node < nnodes are internal nodes (many cycles)
+    * cycle: the "node_likelihood" struct is a ring of likelihood vectors (for rejected/accepted proposals)
+    * cat: number of categories in discrete gamma rates (evolution_model knows this values as "nrates")
+    * pat: number of site patterns (distinct columns)
+    * state: 4 for DNA, 64 (or 63)  for codons, known only to evolution_model but now forced at 4
+
+2009.08.18 Leonardo de Oliveira Martins (leomrtns at gmail dot com)
+  * I didn't document for the last month, so just broad comments:
+  * lowlevel.*: char_vector_struct, which holds sequence names (for alignments and trees) and the
+    sequences themselves; we can check (and reduce the matrix sizes) for duplicate or empty columns: this is useful when
+    checking if species names are duplicated; we can also read directly from a file into char_vector (to read species
+    names.
+  * alignment.*: reads FASTA and nexus formats, and can determine the file format. char_vector_struct charshort that gets
+    the first nonspaced string of sequence name (common in fasta format) to create topology leaf names;
+  * alignment.*: distance_matrix_struct used in calculating the pairwise distances using JC and K2P corrections; also
+    calculates average distance, average kappa and empirical equilibrium frequencies. Can also create a smaller
+    distance_matrix using only selected elements from a larger distance_matrix;
+  * empirical_frequency.*: general ordering of integer vectors by value, preserving index. As the name implies, can be
+    used to calculate (by ordering) the empirical distribution of integer values.
+  * prob_distribution*: probability distribution functions from R version 2.9.1, and extra math functions (like exp()
+    and log() for small numbers. The distributions are the gamma, normal, lognormal and poisson (pgamma, qgamma, dgamma,
+    rgamma for instance).
+  * random_number.*: included a normal random number generator using Marsaglia's polar method (a rejection method where
+    ~27% of the values are rejected), from a Standard Normal (the general case is in prob_distribution.c). At each
+    sample two values are generated so we store one for next call. The same reasoning applies when we want just 32bits
+    or even 16bits of randomness. The double precision float functions (uniform = unif, standard normal = snorm) also
+    have the high- and low-precision versions (using 64 or 32 random bits).
+  * topology_build.*: creates a random tree or a upgma tree based on alignment; these functions have the low level
+    equivalents that use an initialized topology or a distance_matrix, respectively. We also have a function that
+    updates a species tree distance matrix based on the minimum (and maximum as a proof-of-concept) distances from the
+    gene family distance matrices. Similar to the Maximum Tree of Liu and Pearl, but with the resulting species tree
+    distance matrix producing an UPGMA tree (NJ tree is more complex to implement since we must update the whole tree
+    and find the new mindist at every iteration giving O(N^3)). 
+  * topology_mrca.*: can already calculate the minimum cost reconciliation between gene and species trees: we can map
+    gene names to species names where longer species names are searched before shorter names within genes (such that we
+    first look for "EColiII" and only then look for "EColi" on remaining gene names); now topology_struct have a
+    "reconciliation" member struct that is initialized by topology_common.c but used internally by topology_mrca.c;
+    toplogy_struct also has a vector of size two mid[2] (from map id), which gives the index in postorder[] and undone[]
+    node vectors. These vectors make it possible to scan or all internal or just changed nodes, respectively, without a
+    reentrant functions - just with a loop - and the mid[] indexes give the bijection (from node->vector).
+
+2009.07.20 Leonardo de Oliveira Martins (leomrtns at gmail dot com)
+  * random_number.*: The GFSR4 initial vector now is further randomized by a fast gamerand generator over each 
+    element (Ian C. Bullard, http://ianbullard.squarespace.com/journal/2009/4/28/why-you-should-never-use-rand.html), 
+    a very simple left and right shifts (I included 32 bits shifts for working with 64bit arch but I don't know if it's 
+    necessary). The Tausworthe generator now is combined with an XOR-shift generator (xorgens by R. P. Brent) to avoid
+    correlation of streams. A few dieharder tests (the fastest) gave good results, and I think the speed overhead is
+    negligible.
+
+2009.07.19 Leonardo de Oliveira Martins (leomrtns at gmail dot com)
+  * random_number.*: The seed for the streams is chosen based on a GFSR4 generator, and we have 150 independent
+    Tausworthe streams of 64 bits even if initialized with the same seed (streams described in
+    http://www.iro.umontreal.ca/~lecuyer/myftp/papers/tausme2.ps). The Tausworthe streams work with a global variable
+    "biomcmc_random_number" which is a pointer, so the parallel program can cycle between streams (by just
+    "biomcmc_random_number = physically_alloced_rng" where necessary). In practice, the root process should broadcast
+    the initial seed and then streams initialized with same seed and stream_number are guaranteed to be the same. 
+    Different seeds and same stream_number (modulus 150) lead to different points on same stream (which works for small 
+    simulations provided points are distant on the stream). Remember that the seed we provided will be given to an
+    independent GFSR generator where first "stream_number" iterations are thrown away.
+  * random_number_local: tables with parameter sets for 150 streams, and locally-shared GFSR4 instance. The first 
+    streams are better (longer periods). 
+
+2009.07.10 Leonardo de Oliveira Martins (leomrtns at gmail dot com)
+  * topology_mrca.*: Since the reconciliation algorithm is based on the LCA between any two nodes of the species tree
+    now the rmca functions can handle internal nodes as well. The variable topol_node::level is used to climb up the
+    tree always from the node closer to the root.
+  * bipartition.c: Following K&R now there is a faster function to calculate the number of bits set in the bipartition.
+    It's based on the fact that (u-1) is a swap on all bits lower than the least significant (inclusive). Ex: u = 1100
+    then u-1 = 1011. Then u & (u-1) zeroes the last bit set, and the nuber of times we can do this is the number of
+    active bits.
+
+2009.07.07 Leonardo de Oliveira Martins (leomrtns at gmail dot com)
+  * topology_space.c: Warning on Mac OSX about double free (it runs normally after complaining). Seems to be
+    Xcode-related since on Linux gcc it runs fine (update: using fink's gcc the problem persists). 
+    The offending line is "if (line_read) free (line_read);" which may indicate I'm not handling properly the pointer
+    from biomcmc_readline()... UPDATE: even if I remove the offending line it complains about the previous line
+    about order_external, maybe the problem is against freeing vectors alloced by other functions... UPDATE2: it seems
+    to be a shared library problem, where two copies of the library core are linked. The solution is to link statically
+    the library...
+
+2009.07.06 Leonardo de Oliveira Martins (leomrtns at gmail dot com)
+  * lowlevel.*: Created structure char_vector for bidimensional char vectors and applied to topology_space and
+    topology_common structures in replacement for taxlabels; now topology_space doesn't have a ntaxa variable anymore:
+    instead topology_space::char_vector::nstrings should be used. This structure can handle alignments as well (I
+    haven't done it thought). This struct has high-level functions that realloc the matrix on-the-fly and has a
+    ref_counter (since all topologies and topology_space share this information).
+  * topology_common.*: included ref_counter for topology. 
+
+2009.07.05 Leonardo de Oliveira Martins (leomrtns at gmail dot com)
+  * lib/topology_space.*: replace nexus_tree.* since now we create a vector of topologies straight from the nexus tree
+    file. If the trees (the first tree, actually) don't have branch lengths we store only the distinct topologies,
+    otherwise the two vectors (distinct and tree) are the same.
+    If a hashtable is given as parameter to topology_space creation function all nexus_trees nodes are renumbered so that
+    the topologies' leaves follow order of this external hashtable (e.g. if the hashtable comes from the alignment file
+    then the topol leaves have same indexes). The topology_space hashtable then points to this external hashtable and
+    taxlabels are reordered accordingly.
+    The bipartitions of the leaves are shared among all members of the same topology_space.
+  * bipartition.h, hashtable.h: now these structures have a integer counter called ref_counter that describes how many
+    times this instance is being used (referenced) in other places. Since (as described before) they are shared by
+    several structs, they can be deleted (free() ) only after nobody is referencing them anymore to avoid "double free"
+    memory corruption.
+  * topology_mrca.*: finds the LCA between a pair of leaves and stores it into a lower triangular matrix to avoid
+    redundant calculations. The functions ending in "_for_topology" check against distinct topology instance being used
+    by different calls, and functions without it assume the topology is the same (even if is not updated).
+    Timing test: find all LCA pairs for 1024 trees of 512 leaves each took 100 seconds, and occupied around 200Mb of
+    memory (one topology_mrca:: plus the whole topology_space::)
+  * general comment: separate headers into global and local (with local defs from C files going to these local headers)
+
+2009.07.04 Leonardo de Oliveira Martins (leomrtns at gmail dot com)  
+  * lib/topology_common.c: function update_subtree_traversal() is the only recursive function, that updates vectors of
+    nodes in preorder and postorder; as long as topology doesn't change these vectors can be used; (there are also
+    recursive functions like undo_udone() that I haven't checked).
+    * relation between postorder and preorder: postorder left-right is equivalent (in inverse order) to a preorder
+    right-left; so we can store nodes in only postorder and then if we want a preorder we look at vector from last to
+    first element (but if postorder is heavy-child first the this preorder would be light-child first).
+
+2009.07.03 Leonardo de Oliveira Martins (leomrtns at gmail dot com)  
+  * lib/nexus_tree.c: Program may be using too much memory for tree reading (computer halted for 1024 trees of 1024
+    leaves while paup worked fine and fast). (trial fix on 2009.07.05, but haven't tested with same 1024x1024 size) 
+  * general comment (partially done 2009.07.04; done 07.05): try non-recursive traversal functions and compare 
+    speed/memory.
+
+2009.07.02 Leonardo de Oliveira Martins (leomrtns at gmail dot com)  
+  * lib/topology_common.c: so far the only function that changes topol is apply_spr_at_nodes (); it updates u_done, 
+    d_done and splits_updated flags. u_done and d_done are used by likelihood functions. Whenever one uses the
+    bipartitions, she must check splits_updated and call update_toplogy_bipartitions() if necessary.
+    Maybe update_topology_bipartitions() could benefit from info from d_done but I haven't checked - does it depend on
+    likelihood  calcs?
+    Topology also does not have taxa names: main difference from nexus_tree, besides extra struct, strict order and -
+    future - possibility of being created at random from star topology. Maybe future GeneTree and SpeciesTree should
+    have? (update 2009.07.05: topology_space has taxlabels but they are not pointed direclty by nodes).
+  * lib/topology_common.c: there are (at least?) two ways of rerooting based on apply_spr_at_nodes: 
+    1) prune_node = root;
+    2) prune_node = root->left or root->right AND is not LCA of regraft (since in this case prune->up is actually
+    detached);
+
+2009.05.30 Leonardo de Oliveira Martins (leomrtns at gmail dot com)
+
+	* src/main.c : check rng functions
+

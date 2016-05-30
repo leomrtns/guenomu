@@ -1,0 +1,42 @@
+*** bmc2_tree -- calculating distances between gene and species trees
+
+Examples of usage [1]:
+
+$ bmc2_tree gene.tre species.tre
+$ bmc2_tree species.tre species.tre
+$ bmc2_tree gene.tre gene.tre 
+(but "bmc2_tree species.tre gene.tre" is not allowed for these files")
+
+_______________
+
+This example contains two tree files, one representing species and the other a gene family. Each file contains 50 trees,
+and the program bmc_tree will compare all possible 2500 pairs, giving us several reconciliation measures as well some
+other distance measures in the file "pairwise.txt". The screen output is somewhat obscure -- it gives the distances
+divided by categories -- and can be safely ignored.
+
+The difference between the gene tree and the species tree are two:
+1) the species names must be contained within the gene names, where they can be the same; not all species must be
+represented in the gene family (e.g. if we have loss).
+2) all gene tree leaves must have a correspondence with some species. IOW if the species are 
+
+The mapping is done by matching exactly each species name against each gene name, where we start with the longer species
+names (to avoid for instance mapping the species ECO to a gene ECOLI despite there is a species named ECOL). The program
+complains if at the end some gene was not mapped to any species.
+
+Notes:
+
+[1] There are other usages of the program, that are not so interesting:
+  a) if there is only a single file, the program will simulate trees on same leafset and at the end compare the
+frequency of simulated trees with those at the file. Therefore the file should have e.g. uniformly sampled trees from a
+leafset or *all* possible trees for that leafset. And then we can check if our tree randomization functions (like SPR
+swap, or star-refinement random sampling) are adequate for the MCMC, or if some trees/shapes are favored, etc. 
+  b) if besides the gene and species tree we also give the program a number, it will use it as the number of samples on
+a Monte Carlo integration of (an old version of) the normalization constant for the reconciliation probability function. 
+In this case it assumes that the gene tree has all possible trees s.t. it can calculate the "true" normalization constants.  
+
+[2] This output helped me in an analysis where I wanted to see how the reconciliations were related (e.g. losses are
+certainly not independent from duplications), and thus tried to describe the "histogram" of triplets 
+(dups, losses, deepcoals)
+
+
+

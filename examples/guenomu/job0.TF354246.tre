@@ -1,0 +1,38 @@
+#NEXUS
+
+Begin trees;
+ Translate
+	1  schizosaccharomyces_pombe_267,
+	2  schizosaccharomyces_pombe_73,
+	3  saccharomyces_cerevisiae_191,
+	4  schistosoma_mansoni_231,
+	5  caenorhabditis_elegans_96,
+	6  schistosoma_mansoni_205,
+	7  drosophila_yakuba_200,
+	8  drosophila_melanogaster_254,
+	9  drosophila_melanogaster_30,
+	10  drosophila_yakuba_15,
+	11  schizosaccharomyces_pombe_144,
+	12  schizosaccharomyces_pombe_6,
+	13  schizosaccharomyces_pombe_128,
+	14  saccharomyces_cerevisiae_179,
+	15  saccharomyces_cerevisiae_228,
+	16  saccharomyces_cerevisiae_233,
+	17  monosiga_brevicollis_77,
+	18  drosophila_melanogaster_225,
+	19  drosophila_yakuba_197,
+	20  drosophila_yakuba_76,
+	21  drosophila_melanogaster_258,
+	22  drosophila_melanogaster_190,
+	23  drosophila_yakuba_160,
+	24  caenorhabditis_elegans_45,
+	25  homo_sapiens_89,
+	26  homo_sapiens_156,
+	27  gallus_gallus_94,
+	28  schistosoma_mansoni_198,
+	29  schistosoma_mansoni_274,
+	30  monosiga_brevicollis_74
+;
+tree tree_0001 [p = 1.0000, P = 1.0000] = [&W 1.00000000] ((((((((((((27,26),25),((23,22),24)),(29,28)),((21,20),(19,18))),30),(((((15,14),16),((12,11),13)),((10,9),(8,7))),17)),(6,5)),4),3),2),1);
+
+End;
