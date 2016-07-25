@@ -14,6 +14,10 @@ CXXFLAGS=${CXXFLAGS-""}
 dnl automake initialization (completely unrelated to compiler arguments)
 AM_INIT_AUTOMAKE([-Wall -Werror])
 
+AC_USE_SYSTEM_EXTENSIONS
+dnl must be called after AC_USE_SYSTEM_EXTENSIONS (new restriction in autoconf2.68) 
+m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
+
 dnl Basic compiler and related tools
 AC_LANG_C
 AC_PROG_CC
@@ -74,9 +78,9 @@ AC_ARG_ENABLE([debug],
 AC_MSG_RESULT([$debugit])
 if test x"$debugit" = x"yes"; then
     AC_DEFINE([BIOMCMC_DEBUG],[],[Debug Mode, with assert()-like error checking])
-    AM_CFLAGS="${AM_CFLAGS} -g -W -Wall -Werror -Wno-uninitialized -O0"
+    AM_CFLAGS="${AM_CFLAGS} -std=gnu11 -g -W -Wall -Werror -Wno-uninitialized -O0"
 else
-    AM_CFLAGS="${AM_CFLAGS} -funroll-loops -fomit-frame-pointer -finline-functions -O4"
+    AM_CFLAGS="${AM_CFLAGS} -std=gnu11 -funroll-loops -fomit-frame-pointer -finline-functions -O4"
 fi
 
 AC_MSG_CHECKING([whether you want static binaries (not the library, but the executables)])

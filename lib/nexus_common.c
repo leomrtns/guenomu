@@ -59,8 +59,8 @@ remove_oneline_nexus_comments (char *string)
     else if ( *first == ']') count++;
     first--;
   }
-  if (first < string) first = string;
-  *last = '\0'; memmove (first, s, last - s + 1);
+  /* if (first < string) first = string; */ // I realized we always have to add one to first
+  *last = '\0'; memmove (first + 1, s, last - s + 1);
 
   return remove_oneline_nexus_comments (string); /* recursive, to remove other comments before */
 }
