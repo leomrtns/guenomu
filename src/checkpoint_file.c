@@ -324,7 +324,7 @@ summary_struct_trees_to_file (struct summary_struct *sum, mcmc_chain chain)
 {
   int i, j, idx, intsum, job_id = 0;
   FILE *stream;
-  char *filename, *stree, **strsptre;
+  char *filename = NULL, *stree=NULL, **strsptre=NULL;
   double freq, freqsum = 0.;
   topology topol;
   empfreq ef; /* reorder trees by frequency */
@@ -344,9 +344,8 @@ summary_struct_trees_to_file (struct summary_struct *sum, mcmc_chain chain)
       filename = (char*) biomcmc_malloc (64 * sizeof (char));
       sprintf (filename, "job%d.species.trprobs", job_id); 
       strsptre = (char**) biomcmc_malloc (sum->ntrees[i] * sizeof (char*));
+      for (j=0; j < sum->ntrees[i]; j++) strsptre[j] = NULL; // arrays of pointers must be initiallized to null
     }
-
-
 #ifdef BIOMCMC_DEBUG 
     printf ("DEBUG | checkpoint output filenames:: %s\n", filename);
 #endif
@@ -389,7 +388,7 @@ summary_struct_trees_to_file (struct summary_struct *sum, mcmc_chain chain)
   for (j = 0; j < sum->n_samples; j++) fprintf (stream, "tree tree_%d [idx = %d] =  %s;\n", j, sum->sptre_idx[j], strsptre[ sum->sptre_idx[j] ]);
   fprintf (stream, "\nEnd;\n");
   fclose (stream);
-  for (j = sum->ntrees[i] - 1; j >= 0; j--) free (strsptre[j]);
+  for (j = sum->ntrees[sum->n_genes -1] - 1; j >= 0; j--) if (strsptre[j]) free (strsptre[j]);
   free (strsptre);
   free (filename);
 

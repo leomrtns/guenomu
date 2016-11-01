@@ -1,0 +1,26 @@
+#NEXUS
+
+Begin trees;
+ Translate
+	1  schizosaccharomyces_pombe,
+	2  saccharomyces_cerevisiae,
+	3  drosophila_yakuba,
+	4  monosiga_brevicollis,
+	5  caenorhabditis_elegans,
+	6  schistosoma_mansoni,
+	7  drosophila_melanogaster,
+	8  gallus_gallus,
+	9  homo_sapiens
+;
+tree tree_0 [idx = 0] =  (((((((7,3),(2,1)),5),6),4),9),8);
+tree tree_1 [idx = 1] =  ((((((7,3),(2,1)),5),6),4),(9,8));
+tree tree_2 [idx = 0] =  (((((((7,3),(2,1)),5),6),4),9),8);
+tree tree_3 [idx = 2] =  (((((((7,3),5),(2,1)),6),4),9),8);
+tree tree_4 [idx = 0] =  (((((((7,3),(2,1)),5),6),4),9),8);
+tree tree_5 [idx = 2] =  (((((((7,3),5),(2,1)),6),4),9),8);
+tree tree_6 [idx = 2] =  (((((((7,3),5),(2,1)),6),4),9),8);
+tree tree_7 [idx = 0] =  (((((((7,3),(2,1)),5),6),4),9),8);
+tree tree_8 [idx = 1] =  ((((((7,3),(2,1)),5),6),4),(9,8));
+tree tree_9 [idx = 2] =  (((((((7,3),5),(2,1)),6),4),9),8);
+
+End;

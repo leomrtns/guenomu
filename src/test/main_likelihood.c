@@ -40,7 +40,8 @@ main (int argc, char **argv)
   o_time0 = o_time1;
 #endif
   printf ("gamma rates: ");
-  for(i = 0; i < n_cat; i++) printf ("%.5lf ",phy->model->rate[i]); printf ("\n");
+  for(i = 0; i < n_cat; i++) printf ("%.5lf ",phy->model->rate[i]); 
+  printf ("\n");
 
   ln_likelihood (phy, tree);
   printf ("original ln likelihood = %.18lf\n", phy->lk_proposal);

@@ -1,0 +1,43 @@
+#NEXUS
+
+Begin trees;
+ Translate
+	1  drosophila_yakuba_26,
+	2  drosophila_melanogaster_49,
+	3  drosophila_yakuba_282,
+	4  drosophila_melanogaster_160,
+	5  drosophila_yakuba_265,
+	6  drosophila_melanogaster_112,
+	7  drosophila_yakuba_79,
+	8  drosophila_melanogaster_83,
+	9  drosophila_melanogaster_170,
+	10  drosophila_yakuba_18,
+	11  drosophila_yakuba_84,
+	12  drosophila_melanogaster_204,
+	13  drosophila_melanogaster_117,
+	14  drosophila_melanogaster_230,
+	15  drosophila_yakuba_171,
+	16  caenorhabditis_elegans_85,
+	17  caenorhabditis_elegans_236,
+	18  caenorhabditis_elegans_133,
+	19  caenorhabditis_elegans_118,
+	20  schistosoma_mansoni_218,
+	21  homo_sapiens_78,
+	22  monosiga_brevicollis_19,
+	23  monosiga_brevicollis_182,
+	24  caenorhabditis_elegans_254,
+	25  drosophila_melanogaster_238,
+	26  drosophila_yakuba_186,
+	27  drosophila_melanogaster_161,
+	28  drosophila_yakuba_2,
+	29  drosophila_melanogaster_189,
+	30  drosophila_yakuba_98,
+	31  drosophila_yakuba_195,
+	32  drosophila_melanogaster_193,
+	33  drosophila_melanogaster_77,
+	34  drosophila_yakuba_114,
+	35  schistosoma_mansoni_287
+;
+tree tree_0 [p = 1.0000, P = 1.0000] = [&W 1.00000000] (((((((((((((((30,29),(28,27)),(26,25)),(32,31)),(34,33)),24),35),(((23,22),21),20)),(((18,17),16),19)),(15,14)),(((13,12),11),(10,9))),((8,7),(6,5))),(4,3)),2),1);
+
+End;

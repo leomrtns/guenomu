@@ -79,7 +79,7 @@ new_mcmc_chain_from_control_file (control_file ctrl)
 void
 initialize_gene_species (mcmc_chain chain)
 { 
-  int i, j, *freq_sp, *idx = NULL, n_idx, ncycles, n_invalid_genes, this_invalid_gene = 0;
+  int i, j, *freq_sp, *idx = NULL, n_idx, ncycles, this_invalid_gene = 0;
   char_vector gene = chain->ctrl->tree_filenames; /* just an alias */
 
   /* n_cycles should be at least (2 * mtm->n_tries) */ 
@@ -119,6 +119,7 @@ initialize_gene_species (mcmc_chain chain)
       fprintf(stderr, "gene %s not informative: contains less than 4 valid species", gene->string[i]);
   }
 #ifdef BIOMCMC_MPI
+  int n_invalid_genes; 
   MPI_Allreduce (this_invalid_gene, n_invalid_genes, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
   this_invalid_gene = n_invalid_genes;
 #endif

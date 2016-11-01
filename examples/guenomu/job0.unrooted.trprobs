@@ -1,0 +1,18 @@
+#NEXUS
+
+Begin trees;
+ Translate
+	1  schizosaccharomyces_pombe,
+	2  saccharomyces_cerevisiae,
+	3  drosophila_yakuba,
+	4  monosiga_brevicollis,
+	5  caenorhabditis_elegans,
+	6  schistosoma_mansoni,
+	7  drosophila_melanogaster,
+	8  gallus_gallus,
+	9  homo_sapiens
+;
+tree tree_0001 [p = 0.5000, P = 0.5000] = [&W 0.50000000] ((((((7,3),(2,1)),5),6),4),(9,8));
+tree tree_0002 [p = 0.5000, P = 1.0000] = [&W 0.50000000] (((((((7,3),5),(2,1)),6),4),9),8);
+
+End;
