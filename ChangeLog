@@ -1,3 +1,6 @@
+2017.03.22
+		* potential BUG: negative DLO and DCO appeared when running Simul Anneal on an Euk ToL dataset (specifically,
+		genefam OG5_146062.tre) <- yes, seems like a bug
 2013.07.29
 	* BUG: mpi version is not working when nloci < nprocessors (tries to alloc a vector of size zero)
 	* BUG: mpi version does not output all gene trees. E.g. 00.results/20130730.guen (we have gene1.tre but not	job*.gene1.tre) 

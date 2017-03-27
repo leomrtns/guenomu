@@ -245,11 +245,11 @@ mcmc_simulated_annealing (mcmc_chain chain)
   for (j = 1; j <= chain->ctrl->sa_n_samples; j++) {
     for (i = 1; i <= chain->ctrl->sa_n_iter; i++) {
       chain->run.temperature = chain->ctrl->sa_temp_start + increment_t * log (i);
-      mcmc_update_chain (chain, i, false); /* update only trees */
+      mcmc_update_chain (chain, i, true); /* false => update only trees */
     }
     if (!chain->ctrl->n_iter) binary_file_save_checkpoint (chain, j);
     if (!(j%chain->ctrl->n_output))  mcmc_chain_print_output (chain, j);
-    //initialize_chain_model_lambdas (chain, log ((double) i)); /* lambdas are weighted between original input values (w=log(i)) and SA estimates (w=1) */
+    initialize_chain_model_lambdas (chain, log ((double) i)); /* lambdas are weighted between original input values (w=log(i)) and SA estimates (w=1) */
     chain->run.perturbation *= increment_p;
   }
   chain->run.temperature  = original_t;
