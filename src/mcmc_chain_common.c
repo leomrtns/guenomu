@@ -95,7 +95,7 @@ initialize_gene_species (mcmc_chain chain)
 
   for (i = 0; i < chain->gs->n_genes; i++) { /* scan through gene tree files (ASSUMES importance sampling) */
     chain->treespace[i] = read_topology_space_from_file (gene->string[i], NULL); /* NULL -> create hashtable */
-    /* TODO: reduce number of trees on topology_space by neglecting root position */
+    /* TODO: reduce number of trees on topology_space by neglecting root position  <-- available in genefam_dist */
     /* create discrete_sample struct from tree frequencies, in order to sample new tree in O(1) time */
     chain->treefreq[i]  = new_discrete_sample_from_frequencies (chain->treespace[i]->freq, chain->treespace[i]->ndistinct);
 
@@ -142,7 +142,15 @@ initialize_gene_species (mcmc_chain chain)
     fprintf (stderr, "warning: there were %d species not found in any alignment:\n", chain->ctrl->species->nstrings - n_idx);
     for (j=0; j < chain->ctrl->species->nstrings; j++) if (!freq_sp[j]) fprintf (stderr, "\t%s\n", chain->ctrl->species->string[j]);
 #endif
+  //  for (j=0; j < n_idx; j++) printf("%d\tbefore  %s\n",j,chain->ctrl->species->string[idx[j]]); //DEBUG2
     char_vector_reduce_to_valid_strings (chain->ctrl->species, idx, n_idx); /* this will change size of species names */
+    
+    for (i = 0; i < chain->gs->n_genes; i++) { /* recreate reconciliation structures */
+      del_reconciliation (chain->gs->geneTree[i]->rec);
+      chain->gs->geneTree[i]->rec = new_reconciliation (chain->treespace[i]->distinct[0]->nleaves, chain->ctrl->species->nstrings);
+      /* map species names to gene names and store it into rec->sp_id[]; also calculates paralogs and number of species present in genefam */
+      index_sptaxa_to_reconciliation (chain->ctrl->species, chain->gs->geneTree[i]->taxlabel, chain->gs->geneTree[i]->rec);
+    }
   }
 
   /* below we don't need to do ref_counter++ on the topology since it is referred to only here; 
@@ -153,7 +161,7 @@ initialize_gene_species (mcmc_chain chain)
   biomcmc_random_number = chain->ctrl->rng_global; /* all jobs use same rng */
   randomize_topology (chain->gs->spTree);
   new_mrca_for_topology (chain->gs->spTree); /* species tree must have lca vector initialized by hand */
-  
+
   biomcmc_random_number = chain->ctrl->rng_local; /* each job must use its own rng */
   for (i = 0; i < gene->nstrings; i++) {
     /* initialize pointers from gene leaves to species leaves (not altered in branch swapping) and reconciliation */
