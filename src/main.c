@@ -249,7 +249,7 @@ mcmc_simulated_annealing (mcmc_chain chain)
     }
     if (!chain->ctrl->n_iter) binary_file_save_checkpoint (chain, j);
     if (!(j%chain->ctrl->n_output))  mcmc_chain_print_output (chain, j);
-    initialize_chain_model_lambdas (chain, log ((double) j)); /* lambdas are weighted between original input values (w=log(j)) and SA estimates (w=1) */
+    //initialize_chain_model_lambdas (chain, log ((double) j)); /* lambdas are weighted between original input values (w=log(j)) and SA estimates (w=1) */
     chain->run.perturbation *= increment_p;
   }
   chain->run.temperature  = original_t;

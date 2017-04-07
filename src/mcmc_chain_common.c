@@ -49,6 +49,8 @@ int  dummy_gene_species (topology gene, topology species, splitset split);
 void (*local_gene_tree_reconcile) (topology gene, topology species) = &gene_tree_reconcile;
 int  (*local_dSPR_gene_species) (topology gene, topology species, splitset split) = &dSPR_gene_species;
 
+void calculate_max_distances (topology gt, double *maxd, splitset split);
+
 /* OBS: this is the Importance sampling version, which means that ideally  
  * 1) no alignment file is used (currently the functions that would use seq info are tweaked) 
  * 2) we always use the vector of trees, which must be created randomly if not set by user */
@@ -142,7 +144,6 @@ initialize_gene_species (mcmc_chain chain)
     fprintf (stderr, "warning: there were %d species not found in any alignment:\n", chain->ctrl->species->nstrings - n_idx);
     for (j=0; j < chain->ctrl->species->nstrings; j++) if (!freq_sp[j]) fprintf (stderr, "\t%s\n", chain->ctrl->species->string[j]);
 #endif
-  //  for (j=0; j < n_idx; j++) printf("%d\tbefore  %s\n",j,chain->ctrl->species->string[idx[j]]); //DEBUG2
     char_vector_reduce_to_valid_strings (chain->ctrl->species, idx, n_idx); /* this will change size of species names */
     
     for (i = 0; i < chain->gs->n_genes; i++) { /* recreate reconciliation structures */
@@ -210,7 +211,7 @@ initialize_chain_model_lambdas (mcmc_chain chain, double weight)
 void
 initialize_model_parameters (mcmc_chain chain)
 {
-  int i, j;
+  int i;
 
 #ifdef _THIS_IS_COMMENTED_OUT_
   for (i = 0; i < chain->gs->n_genes; i++) { /* initial likelihood */
@@ -231,7 +232,7 @@ initialize_model_parameters (mcmc_chain chain)
   for (i = 0; i < chain->gs->n_genes; i++) {
     /* upper bounds on max number of dups, losses, ils, and HGTs so that hyperpriors have a common meaning with families of
      * different sizes (scaled distances can be interpreted as events per branch) */
-    for (j = 0; j < chain->ndist; j++) chain->dli_max[chain->ndist * i + j] = (double) (chain->gs->geneTree[i]->nleaves);
+    calculate_max_distances (chain->gs->geneTree[i], chain->dli_max + (chain->ndist * i), chain->gs->split[i]);
     chain->model.wa[i] = chain->ctrl->weight_prior; /* concentration parameter for the Dirichlet */
   }
   chain->model.wa_0 = chain->ctrl->weight_prior; /* concentration parameter for the Dirichlet */
@@ -618,6 +619,25 @@ dummy_gene_tree_reconcile (topology gene, topology species)
 int 
 dummy_gene_species (topology gene, topology species, splitset split)
 { (void) gene; (void) species; (void) split; return 0; }
+
+void
+calculate_max_distances (topology gt, double *maxd, splitset split)
+{
+  int j = 0;
+  // max dups: all gene nodes (n-1) point to same (root) sptree node = n-2 dups 
+  if (active_dist[0]) maxd[j++] = (double) (gt->nleaves - 2);
+  // max losses: for each dup, (n-1) losses leaving only one leaf = n_dups*(n-1), where n is number of species
+  if (active_dist[1]) maxd[j++] = (double) ((gt->nleaves - 2) * gt->rec->sp_size);
+  // max deepcoal: dcos=loss-2 dups + 2 |diff in gt and st|; I'm also based on simulations
+  if (active_dist[2]) maxd[j++] = (double) ((gt->nleaves - 2) * (gt->rec->sp_size - 1) + (2 * gt->rec->size_diff));
+  // max mulRF: total number of bipartitions
+  if (active_dist[3]) maxd[j++] = (double) (split->n_g + split->n_s);
+  // max hdist = when disagreement large (n/2) for all edge pairs, w/ n=gene tree leaves
+  if (active_dist[4]) maxd[j++] = (double) (split->n_g * split->n_g);
+  if (active_dist[5]) maxd[j++] = (double) (split->n_g * split->n_g); // value CHANGES if spr is calc or not!!
+  // max uSPR: n-3 
+  if (active_dist[6]) maxd[j++] = (double) (split->n_g);
+}
 
 void
 store_gene_sptree_distances (topology gt, topology st, double *n_dli, splitset split)
