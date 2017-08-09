@@ -120,7 +120,7 @@ initialize_gene_species (mcmc_chain chain)
   }
 #ifdef BIOMCMC_MPI
   int n_invalid_genes; 
-  MPI_Allreduce (this_invalid_gene, n_invalid_genes, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce (&this_invalid_gene, &n_invalid_genes, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
   this_invalid_gene = n_invalid_genes;
 #endif
   if (this_invalid_gene) biomcmc_error("Please remove noninformative genes from list and run guenomu again.");
