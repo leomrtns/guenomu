@@ -649,8 +649,8 @@ store_gene_sptree_distances (topology gt, topology st, double *n_dli, splitset s
   if (active_dist[1]) n_dli[j++] = (double) (gt->rec->nloss);
   if (active_dist[2]) n_dli[j++] = (double) (gt->rec->ndcos);
   if (active_dist[3]) n_dli[j++] = (double) (split->rf);  
-  if (active_dist[4]) n_dli[j++] = (double) (split->hdist);  /* final_cost + initial_cost */
-  if (active_dist[5]) n_dli[j++] = (double) (split->h->initial_cost);  
+  if (active_dist[4]) n_dli[j++] = (double) (split->hdist);  /* final_cost + initial_cost for FIRST Hungarian */
+  if (active_dist[5]) n_dli[j++] = (double) (split->h->initial_cost); /* initial cost of LAST iteration of spr */ 
   if (active_dist[6]) n_dli[j++] = (double) (split->spr + split->spr_extra);  
 }
 

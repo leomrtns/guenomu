@@ -189,8 +189,8 @@ create_splitset_dSPR_genespecies (topology gene, topology species)
   /* species tree before removal of missing species, has at most 2*sp_nleaves-1 bipartitions, and after their removal _but_
    * considering subtrees spanned by gene tree (the mul-tree) has at most 2*gene_nleaves-1 bipartitions. We don't need
    * the leaves (trivial bipartitions) -- therefore the 2 x nleaves is overkill --, but sp0[] needs sp_nleaves. */
-  if (gene->nleaves > species->nleaves) split->spsize = species->nleaves + gene->nleaves;
-  else                                  split->spsize = 2 * species->nleaves; /* +sp leaves for the first elems */
+  if (gene->nleaves > species->nleaves) split->spsize = 2 * species->nleaves + gene->nleaves; // extra for multifurcations 
+  else                                  split->spsize = 3 * species->nleaves; /* +sp leaves for the first elems */
 
   split->s_split = (bipartition*) biomcmc_realloc ((bipartition*) split->s_split, split->spsize * sizeof (bipartition));
   for (i = split->size; i < split->spsize; i++) split->s_split[i] = new_bipartition_from_bipsize (split->s_split[0]->n);
@@ -240,11 +240,12 @@ prepare_genetree_sptree_split (topology gene, topology species, splitset split)
     bipartition_flip_to_smaller_set (split->s_split[i]);
     if (split->s_split[i]->n_ones < 2) { split->n_s--; split_swap_position (split->s_split, i, split->n_s); i--; }
   }
-  split_remove_duplicates (split->s_split, &(split->n_s));
+  split_remove_duplicates (split->s_split, &(split->n_s)); // maybe not needed, since done again below
   for (i=0; i < species->nleaves; i++) if (split->sp0[i]->n_ones > 1) { /* add multifurcations representing species on gene tree */
     bipartition_copy (split->s_split[split->n_s], split->sp0[i]); /* idea from RF distance (arxiv.1210.2665) */
     bipartition_flip_to_smaller_set (split->s_split[split->n_s++]); /* this species has many many copies, that is most of leaves are same species... */
   }
+  split_remove_duplicates (split->s_split, &(split->n_s));
   //for (i = 0; i < split->n_s; i++) bipartition_print_to_stdout (split->s_split[i]); printf ("S after\n");
   /* gene tree bipartitions are simpler */
   split->n_g = gene->nleaves - 3;
