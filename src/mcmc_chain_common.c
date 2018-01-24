@@ -49,6 +49,8 @@ int  dummy_gene_species (topology gene, topology species, splitset split);
 void (*local_gene_tree_reconcile) (topology gene, topology species) = &gene_tree_reconcile;
 int  (*local_dSPR_gene_species) (topology gene, topology species, splitset split) = &dSPR_gene_species;
 
+void calculate_max_distances (topology gt, double *maxd, splitset split);
+
 /* OBS: this is the Importance sampling version, which means that ideally  
  * 1) no alignment file is used (currently the functions that would use seq info are tweaked) 
  * 2) we always use the vector of trees, which must be created randomly if not set by user */
@@ -95,7 +97,7 @@ initialize_gene_species (mcmc_chain chain)
 
   for (i = 0; i < chain->gs->n_genes; i++) { /* scan through gene tree files (ASSUMES importance sampling) */
     chain->treespace[i] = read_topology_space_from_file (gene->string[i], NULL); /* NULL -> create hashtable */
-    /* TODO: reduce number of trees on topology_space by neglecting root position */
+    /* TODO: reduce number of trees on topology_space by neglecting root position  <-- available in genefam_dist */
     /* create discrete_sample struct from tree frequencies, in order to sample new tree in O(1) time */
     chain->treefreq[i]  = new_discrete_sample_from_frequencies (chain->treespace[i]->freq, chain->treespace[i]->ndistinct);
 
@@ -143,6 +145,13 @@ initialize_gene_species (mcmc_chain chain)
     for (j=0; j < chain->ctrl->species->nstrings; j++) if (!freq_sp[j]) fprintf (stderr, "\t%s\n", chain->ctrl->species->string[j]);
 #endif
     char_vector_reduce_to_valid_strings (chain->ctrl->species, idx, n_idx); /* this will change size of species names */
+    
+    for (i = 0; i < chain->gs->n_genes; i++) { /* recreate reconciliation structures */
+      del_reconciliation (chain->gs->geneTree[i]->rec);
+      chain->gs->geneTree[i]->rec = new_reconciliation (chain->treespace[i]->distinct[0]->nleaves, chain->ctrl->species->nstrings);
+      /* map species names to gene names and store it into rec->sp_id[]; also calculates paralogs and number of species present in genefam */
+      index_sptaxa_to_reconciliation (chain->ctrl->species, chain->gs->geneTree[i]->taxlabel, chain->gs->geneTree[i]->rec);
+    }
   }
 
   /* below we don't need to do ref_counter++ on the topology since it is referred to only here; 
@@ -153,7 +162,7 @@ initialize_gene_species (mcmc_chain chain)
   biomcmc_random_number = chain->ctrl->rng_global; /* all jobs use same rng */
   randomize_topology (chain->gs->spTree);
   new_mrca_for_topology (chain->gs->spTree); /* species tree must have lca vector initialized by hand */
-  
+
   biomcmc_random_number = chain->ctrl->rng_local; /* each job must use its own rng */
   for (i = 0; i < gene->nstrings; i++) {
     /* initialize pointers from gene leaves to species leaves (not altered in branch swapping) and reconciliation */
@@ -202,7 +211,7 @@ initialize_chain_model_lambdas (mcmc_chain chain, double weight)
 void
 initialize_model_parameters (mcmc_chain chain)
 {
-  int i, j;
+  int i;
 
 #ifdef _THIS_IS_COMMENTED_OUT_
   for (i = 0; i < chain->gs->n_genes; i++) { /* initial likelihood */
@@ -223,7 +232,7 @@ initialize_model_parameters (mcmc_chain chain)
   for (i = 0; i < chain->gs->n_genes; i++) {
     /* upper bounds on max number of dups, losses, ils, and HGTs so that hyperpriors have a common meaning with families of
      * different sizes (scaled distances can be interpreted as events per branch) */
-    for (j = 0; j < chain->ndist; j++) chain->dli_max[chain->ndist * i + j] = (double) (chain->gs->geneTree[i]->nleaves);
+    calculate_max_distances (chain->gs->geneTree[i], chain->dli_max + (chain->ndist * i), chain->gs->split[i]);
     chain->model.wa[i] = chain->ctrl->weight_prior; /* concentration parameter for the Dirichlet */
   }
   chain->model.wa_0 = chain->ctrl->weight_prior; /* concentration parameter for the Dirichlet */
@@ -612,8 +621,30 @@ dummy_gene_species (topology gene, topology species, splitset split)
 { (void) gene; (void) species; (void) split; return 0; }
 
 void
+calculate_max_distances (topology gt, double *maxd, splitset split)
+{
+  int j = 0; // setting below is from "production" version (from papers 2016)
+  int i; for (i=0; i < Ndist; i++)  if (active_dist[i]) maxd[j++] = (double) gt->nleaves;
+  return; // setting below (unused) is for experimental version
+  // max dups: all gene nodes (n-1) point to same (root) sptree node = n-2 dups 
+  if (active_dist[0]) maxd[j++] = (double) (gt->nleaves - 2);
+  // max losses: for each dup, (n-1) losses leaving only one leaf = n_dups*(n-1), where n is number of species
+  if (active_dist[1]) maxd[j++] = (double) ((gt->nleaves - 2) * gt->rec->sp_size);
+  // max deepcoal: dcos=loss-2 dups + 2 |diff in gt and st|; I'm also based on simulations
+  if (active_dist[2]) maxd[j++] = (double) ((gt->nleaves - 2) * (gt->rec->sp_size - 1) + (2 * gt->rec->size_diff));
+  // max mulRF: total number of bipartitions
+  if (active_dist[3]) maxd[j++] = (double) (split->n_g + split->n_s);
+  // max hdist = when disagreement large (n/2) for all edge pairs, w/ n=gene tree leaves
+  if (active_dist[4]) maxd[j++] = (double) (split->n_g * split->n_g);
+  if (active_dist[5]) maxd[j++] = (double) (split->n_g * split->n_g); // value CHANGES if spr is calc or not!!
+  // max uSPR: n-3 
+  if (active_dist[6]) maxd[j++] = (double) (split->n_g);
+}
+
+void
 store_gene_sptree_distances (topology gt, topology st, double *n_dli, splitset split)
 {
+  // FIXME: change 6th distance (initial_cost): sum up over all SPRs, or fix at first hungarian... BTW we can add matrix-based distances specially STAR (Liu)
   int j = 0;
   local_gene_tree_reconcile (gt, st);
   local_dSPR_gene_species (gt, st, split);
@@ -621,8 +652,8 @@ store_gene_sptree_distances (topology gt, topology st, double *n_dli, splitset s
   if (active_dist[1]) n_dli[j++] = (double) (gt->rec->nloss);
   if (active_dist[2]) n_dli[j++] = (double) (gt->rec->ndcos);
   if (active_dist[3]) n_dli[j++] = (double) (split->rf);  
-  if (active_dist[4]) n_dli[j++] = (double) (split->hdist);  /* final_cost + initial_cost */
-  if (active_dist[5]) n_dli[j++] = (double) (split->h->initial_cost);  
+  if (active_dist[4]) n_dli[j++] = (double) (split->hdist);  /* final_cost + initial_cost for FIRST Hungarian */
+  if (active_dist[5]) n_dli[j++] = (double) (split->h->initial_cost); /* initial cost of LAST iteration of spr */ 
   if (active_dist[6]) n_dli[j++] = (double) (split->spr + split->spr_extra);  
 }
 

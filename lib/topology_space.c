@@ -758,7 +758,7 @@ number_of_leaves_in_newick (char **string, bool resolve_trifurcation)
     bzero (tstring, sizeof (char) * (len + add + 1));
     tstring = strncat (tstring, *string, nsplit);
     tstring = strcat (tstring, ",(");
-    tstring = strncat (tstring, *string + nsplit + 1, len - nsplit - 2);
+    tstring = strncat (tstring, *string + nsplit + 1, len - nsplit - 1);
 
     if (has_branches) tstring = strcat (tstring, "):0.0");
     else tstring = strcat (tstring, ")");
