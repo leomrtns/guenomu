@@ -623,7 +623,7 @@ dummy_gene_species (topology gene, topology species, splitset split)
 void
 calculate_max_distances (topology gt, double *maxd, splitset split)
 {
-  int j = 0;
+  int j = 0; // all max distances on "production" version (from papers 2016) were set to  (double) (chain->gs->geneTree[i]->nleaves);
   // max dups: all gene nodes (n-1) point to same (root) sptree node = n-2 dups 
   if (active_dist[0]) maxd[j++] = (double) (gt->nleaves - 2);
   // max losses: for each dup, (n-1) losses leaving only one leaf = n_dups*(n-1), where n is number of species
@@ -642,6 +642,7 @@ calculate_max_distances (topology gt, double *maxd, splitset split)
 void
 store_gene_sptree_distances (topology gt, topology st, double *n_dli, splitset split)
 {
+  // FIXME: change 6th distance (initial_cost): sum up over all SPRs, or fix at first hungarian... BTW we can add matrix-based distances specially STAR (Liu)
   int j = 0;
   local_gene_tree_reconcile (gt, st);
   local_dSPR_gene_species (gt, st, split);

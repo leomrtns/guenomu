@@ -1,3 +1,5 @@
+2018.01.23
+		* branches: noticed that master branch didn't have the bug described below fixed (2017.03.28)
 2017.03.28
 		* fixed bug: when effective number of species much smaller than original, reconciliation structures need to be
 		recreated; This might be responsible for negative reconciliation costs (since they use "effective" number of
