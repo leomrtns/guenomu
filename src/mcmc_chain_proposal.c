@@ -87,8 +87,8 @@ mcmc_update_species_tree (mcmc_chain chain, const int iteration)
   for (j = 0; j < chain->gs->n_genes; j++) {
     /* d(G,S') -- calculate number of duplications and prob contribution from gene (note that n_dli[0] is used if accepted) */
     store_gene_sptree_distances (chain->gs->geneTree[j], chain->mtm->spTree[0], chain->mtm->n_dli[0] + chain->ndist * j, chain->gs->split[j]);
-    int k; for (k=chain->ndist * j; k < chain->ndist * (j+1); k++) if (chain->mtm->n_dli[0][k] < 0) 
-      fprintf (stderr, "DEBUG2::update_species_tree::  iter %d, gene %d, dist %d value %lf\n", iteration, j, k - chain->ndist * j, chain->mtm->n_dli[0][k]);
+//    int k; for (k=chain->ndist * j; k < chain->ndist * (j+1); k++) if (chain->mtm->n_dli[0][k] < 0) 
+//      fprintf (stderr, "DEBUG2::update_species_tree::  iter %d, gene %d, dist %d value %lf\n", iteration, j, k - chain->ndist * j, chain->mtm->n_dli[0][k]);
 
     chain->mtm->lnPrior_dist[0][j] = prob_term_prior_dist (chain, 0, j);
     /* d(G,S) is already in [current] */
@@ -101,8 +101,8 @@ mcmc_update_species_tree (mcmc_chain chain, const int iteration)
       lnProb -= prob_term_prior_dist (chain, aux_idx, j); /* d(G,S') / [d(G',S') d(G,S) ] */
       /* d(G',S) distances will be stored in n_dli[aux_idx][chain->ndist*j + k] */
       store_gene_sptree_distances (chain->gs->auxgTree[j], chain->gs->spTree, chain->mtm->n_dli[aux_idx] + chain->ndist * j, chain->gs->split[j]); 
-      for (k=chain->ndist * j; k < chain->ndist * (j+1); k++) if (chain->mtm->n_dli[aux_idx][k] < 0) 
-        fprintf (stderr, "DEBUG2::update_species_tree::aux  iter %d, gene %d, dist %d value %lf\n", iteration, j, k - chain->ndist * j, chain->mtm->n_dli[aux_idx][k]);
+//      for (k=chain->ndist * j; k < chain->ndist * (j+1); k++) if (chain->mtm->n_dli[aux_idx][k] < 0) 
+//        fprintf (stderr, "DEBUG2::update_species_tree::aux  iter %d, gene %d, dist %d value %lf\n", iteration, j, k - chain->ndist * j, chain->mtm->n_dli[aux_idx][k]);
       lnProb += prob_term_prior_dist (chain, aux_idx, j); /* [d(G',S)) d(G,S')] / [d(G',S') d(G,S) ] */
     }
   }
@@ -158,8 +158,8 @@ mcmc_update_species_tree_GMTM (mcmc_chain chain, const int iteration)
     for (j = 0; j < chain->gs->n_genes; j++) {
       /* d(G,S') -- note that n_dli[i] is used if accepted */
       store_gene_sptree_distances (chain->gs->geneTree[j], chain->mtm->spTree[i], chain->mtm->n_dli[i] + chain->ndist * j, chain->gs->split[j]);
-      int k; for (k=chain->ndist * j; k < chain->ndist * (j+1); k++) if (chain->mtm->n_dli[i][k] < 0) 
-        fprintf (stderr,"DEBUG2::update_species_treeGMTM::  iter %d, gene %d, dist %d value %lf, ntries %d\n", iteration, j, k - chain->ndist * j, chain->mtm->n_dli[i][k], i);
+//      int k; for (k=chain->ndist * j; k < chain->ndist * (j+1); k++) if (chain->mtm->n_dli[i][k] < 0) 
+//        fprintf (stderr,"DEBUG2::update_species_treeGMTM::  iter %d, gene %d, dist %d value %lf, ntries %d\n", iteration, j, k - chain->ndist * j, chain->mtm->n_dli[i][k], i);
       chain->mtm->lnPrior_dist[i][j] = prob_term_prior_dist (chain, i, j);
       lnp1 += chain->mtm->lnPrior_dist[i][j]; /* GMTM weight can be anything -- in our case, normalized prob s.t. one term cancels out */
     }
@@ -189,8 +189,8 @@ mcmc_update_species_tree_GMTM (mcmc_chain chain, const int iteration)
       for (j = 0; j < chain->gs->n_genes; j++) {
         /* d(G,S_j) where S_j are reference points -- that is, used only to calculate sum of weights in a reversed proposal */
         store_gene_sptree_distances (chain->gs->geneTree[j], chain->mtm->spTree[i], chain->mtm->n_dli[i] + chain->ndist * j, chain->gs->split[j]);
-        int k; for (k=chain->ndist * j; k < chain->ndist * (j+1); k++) if (chain->mtm->n_dli[i][k] < 0) 
-          fprintf (stderr,"DEBUG2::update_species_treeGMTM::proposal  iter %d, gene %d, dist %d value %lf, ntries %d\n", iteration, j, k - chain->ndist * j, chain->mtm->n_dli[i][k], i);
+//        int k; for (k=chain->ndist * j; k < chain->ndist * (j+1); k++) if (chain->mtm->n_dli[i][k] < 0) 
+//          fprintf (stderr,"DEBUG2::update_species_treeGMTM::proposal  iter %d, gene %d, dist %d value %lf, ntries %d\n", iteration, j, k - chain->ndist * j, chain->mtm->n_dli[i][k], i);
         lnp1 += prob_term_prior_dist (chain, i, j);
       }
     }
@@ -210,8 +210,8 @@ mcmc_update_species_tree_GMTM (mcmc_chain chain, const int iteration)
     lnp1 = prob_term_prior_dist (chain, aux_idx, j);  
     /* d(G',S)  stored in n_dli[aux_idx][chain->ndist*j + k], aux_gene tree G' is auxgTree[j] */
     store_gene_sptree_distances (chain->gs->auxgTree[j], chain->gs->spTree, chain->mtm->n_dli[aux_idx] + chain->ndist * j, chain->gs->split[j]); 
-    int k; for (k=chain->ndist * j; k < chain->ndist * (j+1); k++) if (chain->mtm->n_dli[aux_idx][k] < 0) 
-      fprintf (stderr, "DEBUG2::update_species_treeGMTM::aux  iter %d, gene %d, dist %d value %lf, ntries %d\n", iteration, j, k - chain->ndist * j, chain->mtm->n_dli[aux_idx][k], i);
+//    int k; for (k=chain->ndist * j; k < chain->ndist * (j+1); k++) if (chain->mtm->n_dli[aux_idx][k] < 0) 
+//      fprintf (stderr, "DEBUG2::update_species_treeGMTM::aux  iter %d, gene %d, dist %d value %lf, ntries %d\n", iteration, j, k - chain->ndist * j, chain->mtm->n_dli[aux_idx][k], i);
     lnProb += (prob_term_prior_dist (chain, aux_idx, j) - lnp1); /* d(G',S)/d(G',S') */
   }
   lnProb *= chain->run.temperature;
@@ -386,8 +386,8 @@ mcmc_sample_auxiliary_genetree (mcmc_chain chain, int n_gene, topology sptree, d
   copy_topology_from_topology (chain->gs->auxgTree[n_gene], chain->gs->geneTree[n_gene]);
   /* prepare current (accepted) values */
   store_gene_sptree_distances (chain->gs->auxgTree[n_gene], sptree, dli_new, chain->gs->split[n_gene]); 
-  int k; for (k=0; k < chain->ndist; k++) if (dli_new[k] < 0) 
-    fprintf (stderr, "DEBUG2::sample_aux_genetree gene %d, dist %d value %lf\n", n_gene, k, dli_new[k]);
+//  int k; for (k=0; k < chain->ndist; k++) if (dli_new[k] < 0) 
+//    fprintf (stderr, "DEBUG2::sample_aux_genetree gene %d, dist %d value %lf\n", n_gene, k, dli_new[k]);
   lnProb_accepted = prob_term_prior_dist_from_vectors (chain, n_gene, dli_new, lambda, wb); 
   lnProb_accepted *= chain->run.temperature; /* assume this chain can be heated */
   /* these must be LOCAL (not from mtm) since we are inside a calling function that may already be using them... */
@@ -404,8 +404,8 @@ mcmc_sample_auxiliary_genetree (mcmc_chain chain, int n_gene, topology sptree, d
       /* each sample is further away from current state (and all proposals are symmetric) */
       for (j=0;j<=i; j++) topology_apply_spr_unrooted (chain->gs->auxgTree[n_gene], false); /* false since we don't need to update likelihoods */
       store_gene_sptree_distances (chain->gs->auxgTree[n_gene], sptree, dli + (chain->ndist * i), chain->gs->split[n_gene]); 
-      for (k=chain->ndist*i; k < chain->ndist*(j+1); k++) if (dli[k] < 0) 
-        fprintf (stderr, "DEBUG2::sample_aux_genetree::aux gene %d, dist %d value %lf, iter %d\n", n_gene, k - chain->ndist*j, dli[k], n_iter);
+//      for (k=chain->ndist*i; k < chain->ndist*(j+1); k++) if (dli[k] < 0) 
+//        fprintf (stderr, "DEBUG2::sample_aux_genetree::aux gene %d, dist %d value %lf, iter %d\n", n_gene, k - chain->ndist*j, dli[k], n_iter);
       lnProb[i] = prob_term_prior_dist_from_vectors (chain, n_gene, dli + (chain->ndist * i), lambda, wb);
       lnProb[i] *= chain->run.temperature;
       /* calculate scaling factor (so that sums up to one if it were not in log scale) */ 
@@ -425,8 +425,8 @@ mcmc_sample_auxiliary_genetree (mcmc_chain chain, int n_gene, topology sptree, d
         copy_intvector_to_topology_by_id (chain->gs->auxgTree[pidx], chain->mtm->topol_int + (new * chain->gs->geneTree[n_gene]->nnodes));
         for (j=chain->mtm->n_tries;j<=i; j++) topology_apply_spr_unrooted (chain->gs->auxgTree[pidx], false); /* false since we don't need to update likelihoods */
         store_gene_sptree_distances (chain->gs->auxgTree[pidx], sptree, dli + (chain->ndist * i), chain->gs->split[n_gene]); 
-        for (k=chain->ndist*i; k < chain->ndist*(j+1); k++) if (dli[k] < 0) 
-          fprintf (stderr, "DEBUG2::sample_aux_genetree::aux2 gene %d, dist %d value %lf, iter %d\n", n_gene, k - chain->ndist*j, dli[k], n_iter);
+//        for (k=chain->ndist*i; k < chain->ndist*(j+1); k++) if (dli[k] < 0) 
+//          fprintf (stderr, "DEBUG2::sample_aux_genetree::aux2 gene %d, dist %d value %lf, iter %d\n", n_gene, k - chain->ndist*j, dli[k], n_iter);
         lnProb[i] = prob_term_prior_dist_from_vectors (chain, n_gene, dli + (chain->ndist * i), lambda, wb); 
         lnProb[i] *= chain->run.temperature;
       }
@@ -465,8 +465,8 @@ mcmc_update_geneTree_importance_sampling_mtm (mcmc_chain chain, int n_gene)
     copy_topology_from_topology (chain->gs->auxgTree[n_gene], chain->treespace[n_gene]->distinct[j]);  /* new sample */
     ids[i] = j; /* if accepted, we must know which tree it is */
     store_gene_sptree_distances (chain->gs->auxgTree[n_gene], chain->gs->spTree, chain->mtm->n_dli[i] + genepos, chain->gs->split[n_gene]); 
-    int k; for (k=genepos; k < genepos + chain->ndist; k++) if (chain->mtm->n_dli[i][k] < 0) 
-      fprintf (stderr, "DEBUG2::update_genetree_is_mtm gene %d, dist %d value %lf, ntries %d\n", n_gene, k - genepos, chain->mtm->n_dli[i][k], i);
+//    int k; for (k=genepos; k < genepos + chain->ndist; k++) if (chain->mtm->n_dli[i][k] < 0) 
+//      fprintf (stderr, "DEBUG2::update_genetree_is_mtm gene %d, dist %d value %lf, ntries %d\n", n_gene, k - genepos, chain->mtm->n_dli[i][k], i);
     chain->mtm->lnProb[i] = prob_term_prior_dist (chain, i, n_gene);
     chain->mtm->lnProb[i] *= chain->run.temperature;
     /* calculate scaling factor (so that sums up to one if it were not in log scale) */ 
@@ -480,8 +480,8 @@ mcmc_update_geneTree_importance_sampling_mtm (mcmc_chain chain, int n_gene)
     j = biomcmc_rng_discrete (chain->treefreq[n_gene]); /* treefreq[n_gene] has the frequencies of each topology */ 
     copy_topology_from_topology (chain->gs->auxgTree[n_gene], chain->treespace[n_gene]->distinct[j]);  /* new sample */
     store_gene_sptree_distances (chain->gs->auxgTree[n_gene], chain->gs->spTree, chain->mtm->n_dli[i] + genepos, chain->gs->split[n_gene]); 
-    int k; for (k=genepos; k < genepos + chain->ndist; k++) if (chain->mtm->n_dli[i][k] < 0) 
-      fprintf (stderr, "DEBUG2::update_genetree_is_mtm_II gene %d, dist %d value %lf, ntries %d\n", n_gene, k - genepos, chain->mtm->n_dli[i][k], i);
+//   int k; for (k=genepos; k < genepos + chain->ndist; k++) if (chain->mtm->n_dli[i][k] < 0) 
+//      fprintf (stderr, "DEBUG2::update_genetree_is_mtm_II gene %d, dist %d value %lf, ntries %d\n", n_gene, k - genepos, chain->mtm->n_dli[i][k], i);
     chain->mtm->lnProb[i] = prob_term_prior_dist (chain, i, n_gene);
     chain->mtm->lnProb[i] *= chain->run.temperature;
   }
@@ -520,8 +520,8 @@ mcmc_update_geneTree_importance_sampling_simple (mcmc_chain chain, int n_gene)
   chain->gs->geneTree[n_gene]->id = chain->treespace[n_gene]->distinct[j]->id;
 
   store_gene_sptree_distances (chain->gs->geneTree[n_gene], chain->gs->spTree, chain->mtm->n_dli[0] + genepos, chain->gs->split[n_gene]); 
-  for (k=genepos; k < genepos + chain->ndist; k++) if (chain->mtm->n_dli[0][k] < 0) 
-    fprintf (stderr, "DEBUG2::update_genetree_is_simple gene %d, dist %d value %lf\n", n_gene, k - genepos, chain->mtm->n_dli[0][k]);
+//  for (k=genepos; k < genepos + chain->ndist; k++) if (chain->mtm->n_dli[0][k] < 0) 
+//    fprintf (stderr, "DEBUG2::update_genetree_is_simple gene %d, dist %d value %lf\n", n_gene, k - genepos, chain->mtm->n_dli[0][k]);
   lnProb = prob_term_prior_dist (chain, 0, n_gene);
   acceptance_ratio = (lnProb - chain->mtm->lnPrior_dist_cur[n_gene]) * chain->run.temperature; 
 
