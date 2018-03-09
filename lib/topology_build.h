@@ -37,7 +37,7 @@ void upgma_from_distance_matrix (topology tree, distance_matrix dist, bool singl
 /*! \brief updates distances between species based on genes and gene-to-species mapping, with min on upper and mean on lower diagonal  */
 void fill_species_dists_from_gene_dists (distance_matrix spdist, distance_matrix gendist, int *sp_id, bool use_upper_gene);
 /*! \brief update global (over loci) species distances besed on local (within locus) species distances */
-void update_species_dists_from_spdist (distance_matrix global, distance_matrix local, int *spexist);
+void update_species_dists_from_spdist (distance_matrix global, distance_matrix local, distance_matrix counter, int *spexist);
 
 /*! \brief random rerooting */
 void topology_apply_rerooting (topology tree, bool update_done);

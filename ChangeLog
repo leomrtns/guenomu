@@ -1,3 +1,9 @@
+2018.03.09
+		* main_maxtree: fixed averaging across loci (mean is divided by number of pair comparisons N_ij and not overall
+		representativity of each species N_i x N_j). Also each locus-wise spmatrix is rescaled to have largest distance
+		equal to one (through new_d_ij = d_ij/max(d_ij) and remembering that mean(d_ij)>min(d_ij) ). This may be relevant
+		when summarising across loci. Furthermore created blens[] vector to allow branch length rescaling, specially to
+		recreate original lengths -- guenomu by default divides lengths by total tree length.
 2018.01.23
 		* branches: noticed that master branch didn't have the bug described below fixed (2017.03.28)
 2017.03.28

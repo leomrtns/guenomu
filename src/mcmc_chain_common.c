@@ -146,7 +146,7 @@ initialize_gene_species (mcmc_chain chain)
 #endif
     char_vector_reduce_to_valid_strings (chain->ctrl->species, idx, n_idx); /* this will change size of species names */
     
-    for (i = 0; i < chain->gs->n_genes; i++) { /* recreate reconciliation structures */
+    for (i = 0; i < chain->gs->n_genes; i++) { /* recreate reconciliation structures; this was a bug until 2017.09 */
       del_reconciliation (chain->gs->geneTree[i]->rec);
       chain->gs->geneTree[i]->rec = new_reconciliation (chain->treespace[i]->distinct[0]->nleaves, chain->ctrl->species->nstrings);
       /* map species names to gene names and store it into rec->sp_id[]; also calculates paralogs and number of species present in genefam */

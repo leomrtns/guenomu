@@ -21,9 +21,8 @@ param_n_output = 4              [ <integer> ]
 [ leaving it at zero means that you don't care about the normalization constant -- good approximation unless you're
   using just one or two distances, or if you are care about precise credible intervals...]
 param_n_mc_samples = 0           [<integer>]
-[ Simulated annealing: number of samples (cycles), number of iterations per sample, and (inverse) initial and final temperatures]
 [ parameters for initial simulated annealing: how many cycles, number of iterations per cycle, initial (inverse) temperature and final (inverse) temperature ]
-param_anneal = 10 1000 0.5 10  [<eger> <integer> <double> <double>]
+param_anneal = 10 1000 0.5 10  [<integer> <integer> <double> <double>]
 
 [ name of file containing a list of tree filenames ]
 param_file_with_tree_files =list_of_trees.txt [ <filename> ]

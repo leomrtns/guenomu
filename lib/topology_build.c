@@ -260,6 +260,7 @@ void
 fill_species_dists_from_gene_dists (distance_matrix spdist, distance_matrix gendist, int *sp_id, bool use_upper_gene)
 {
   int i, j, k, row, col, *freq;
+  double max_me = 0., max_mi = 0.;
 
   freq = (int*) biomcmc_malloc (spdist->size * sizeof (int));
   for (i = 0; i < spdist->size; i++) freq[i] = 0; /* species frequency for this gene */
@@ -277,7 +278,17 @@ fill_species_dists_from_gene_dists (distance_matrix spdist, distance_matrix gend
     spdist->d[col][row] += gendist->d[i][j]; /* lower diag = mean */
   }
 
-  for (i = 0; i < spdist->size; i++) for (j = 0; j < i; j++) if (freq[i] && freq[j]) spdist->d[i][j] /= (double)(freq[i] * freq[j]); 
+  for (i = 0; i < spdist->size; i++) for (j = 0; j < i; j++) if (freq[i] && freq[j]) {
+    spdist->d[i][j] /= (double)(freq[i] * freq[j]); /* mean value */
+    if (max_me < spdist->d[i][j]) max_me = spdist->d[i][j];
+    if (max_mi < spdist->d[j][i]) max_mi = spdist->d[j][i];
+  }
+  if (max_me < 1e-12) max_me = 1e-12; /* pathological case with zero distances */
+  if (max_mi < 1e-12) max_mi = 1e-12; /* (although better to fix original tree brlens) */
+  for (i = 0; i < spdist->size; i++) for (j = 0; j < i; j++) if (freq[i] && freq[j]) {
+    spdist->d[i][j] /= max_me;   // mean
+//    spdist->d[j][i] /= max_mi;   // min 
+  }
 
 #ifdef BIOMCMC_PRINT_DEBUG
   for (i=0; i < gendist->size; i++) printf ("spdistfromgene %d\t -> %d\n", i, sp_id[i]);
@@ -288,7 +299,7 @@ fill_species_dists_from_gene_dists (distance_matrix spdist, distance_matrix gend
 }
 
 void
-update_species_dists_from_spdist (distance_matrix global, distance_matrix local, int *spexist)
+update_species_dists_from_spdist (distance_matrix global, distance_matrix local, distance_matrix counter, int *spexist)
 { 
   int i, j;
   if (global->size != local->size) biomcmc_error ("species distance matrices have different sizes within and across loci");
@@ -296,6 +307,7 @@ update_species_dists_from_spdist (distance_matrix global, distance_matrix local,
   for (i = 0; i < local->size; i++) for (j = 0; j < i; j++) if (spexist[i] && spexist[j]) { 
     if (global->d[j][i] > local->d[j][i]) global->d[j][i] = local->d[j][i]; /* upper triangular => minimum */
     global->d[i][j] += local->d[i][j]; /* just the sum; to have the mean we need to divide by representativity of each species across loci */
+    if (counter) { counter->d[i][j] += 1.; counter->d[j][i] += 1.; }
   }
 }
 
