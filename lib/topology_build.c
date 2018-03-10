@@ -285,10 +285,8 @@ fill_species_dists_from_gene_dists (distance_matrix spdist, distance_matrix gend
   }
   if (max_me < 1e-12) max_me = 1e-12; /* pathological case with zero distances */
   if (max_mi < 1e-12) max_mi = 1e-12; /* (although better to fix original tree brlens) */
-  for (i = 0; i < spdist->size; i++) for (j = 0; j < i; j++) if (freq[i] && freq[j]) {
-    spdist->d[i][j] /= max_me;   // mean
-//    spdist->d[j][i] /= max_mi;   // min 
-  }
+  /* rescaling not used -- can't rescale a 'subtree' to have same length as larger tree */
+  // for (i = 0; i < spdist->size; i++) for (j = 0; j < i; j++) if (freq[i] && freq[j]) { spdist->d[i][j] /= max_me; spdist->d[j][i] /= max_mi; }
 
 #ifdef BIOMCMC_PRINT_DEBUG
   for (i=0; i < gendist->size; i++) printf ("spdistfromgene %d\t -> %d\n", i, sp_id[i]);

@@ -71,7 +71,7 @@ maximum_tree (char_vector sptaxa, char **filename, int nfiles, bool branch_lengt
     if (branch_length_mode > 0) {
       blens = (double *) biomcmc_malloc (tsp->distinct[0]->nnodes * sizeof (double));
       if (tsp->distinct[0]->blength) { // does gene tree have lengths ?
-        min_blen = 1e-5/(double)(tsp->distinct[0]->nnodes);
+        min_blen = 1e-6/(double)(tsp->distinct[0]->nnodes);
         if (branch_length_mode == 1) // use original branch lengths, i.e. must multiply by total tree length
           for (j = 0; j < tsp->distinct[0]->nnodes; j++) blens[j] = tsp->distinct[0]->blength[j] * tsp->tlen[0] + min_blen; /* rescale to original tree length */
         else // mode 2 is to use rescaled branch lengths (as originally stored by biomcmc)
@@ -145,7 +145,8 @@ maximum_tree (char_vector sptaxa, char **filename, int nfiles, bool branch_lengt
   else if (branch_length_mode == 1) printf ("[using original branch lengths from trees]\n");
   else printf ("[using rescaled branch lengths s.t. tree length is one]\n");
  /* GLASS (min across loci, mins within locus) --> single-linkage JComputBiol.2012.632.pdf */
-  upgma_from_distance_matrix (maxtree, spdist1, true); /* always uses upper triangular  (false=UPGMA; true=single-linkage) */
+//  upgma_from_distance_matrix (maxtree, spdist1, true); /* always uses upper triangular  (false=UPGMA; true=single-linkage) */
+  upgma_from_distance_matrix (maxtree, spdist1, false); /* original algo uses single-linkage but UPGMA better */
   s = topology_to_string_by_name (maxtree, maxtree->blength); /* second parameter is vector with branch lengths */
   printf ("[GLASS SPTREE] %s;\n",s); fflush(stdout); free (s);
   
@@ -156,7 +157,8 @@ maximum_tree (char_vector sptaxa, char **filename, int nfiles, bool branch_lengt
   printf ("[STEAC SPTREE] %s;\n",s); fflush(stdout); free (s);
 
  /* MAC (min across loci, means within locus) --> single-linkage JComputBiol.2012.632.pdf */
-  upgma_from_distance_matrix (maxtree, spdist2, true); /* always uses upper triangular  (false=UPGMA; true=single-linkage) */
+//  upgma_from_distance_matrix (maxtree, spdist2, true); /* always uses upper triangular  (false=UPGMA; true=single-linkage) */
+  upgma_from_distance_matrix (maxtree, spdist2, false); /* original algorithms uses single-linkage but UPGMA performs better in practice */
   s = topology_to_string_by_name (maxtree, maxtree->blength); /* second parameter is vector with branch lengths */
   printf ("[MAC   SPTREE] %s;\n",s); fflush(stdout); free (s);
   
