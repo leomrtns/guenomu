@@ -42,7 +42,7 @@ maximum_tree (char_vector sptaxa, char **filename, int nfiles, bool branch_lengt
 {
   int i, j, number_of_species_present_in_gene, *freq_sp=NULL, *bool_sp=NULL, *idx = NULL, n_idx;
   distance_matrix spdist_local, spdist1, spdist2, genedist, counter_mat;
-  double *blens = NULL, min_blen = 0;
+  double *blens = NULL, min_blen = 0, dist_of_missing_pairs = 0.;
   topology_space tsp;
   topology maxtree;
   char *s;
@@ -73,13 +73,13 @@ maximum_tree (char_vector sptaxa, char **filename, int nfiles, bool branch_lengt
       if (tsp->distinct[0]->blength) { // does gene tree have lengths ?
         min_blen = 1e-6/(double)(tsp->distinct[0]->nnodes);
         if (branch_length_mode == 1) // use original branch lengths, i.e. must multiply by total tree length
-          for (j = 0; j < tsp->distinct[0]->nnodes; j++) blens[j] = tsp->distinct[0]->blength[j] * tsp->tlen[0] + min_blen; /* rescale to original tree length */
-        else // mode 2 is to use rescaled branch lengths (as originally stored by biomcmc)
-          for (j = 0; j < tsp->distinct[0]->nnodes; j++) blens[j] = tsp->distinct[0]->blength[j] + min_blen; /* sum of blens is always one */
+          for (j = 0; j < tsp->distinct[0]->nnodes; j++) blens[j] = tsp->distinct[0]->blength[j] * tsp->tlen[0] + min_blen; /* rescale to original tree lengths */
+        else // mode 2 uses rescaled branch lengths (as stored by biomcmc) s.t. sum is one, multiplied by number of nodes (similar to nodal distance)
+          for (j = 0; j < tsp->distinct[0]->nnodes; j++) blens[j] = tsp->distinct[0]->blength[j] * (double)(tsp->distinct[0]->nnodes) + min_blen; /* sum is number of nodes */
       }
       else { // we only have topological information of tree
         if (branch_length_mode == 2) min_blen = 1./(double)(tsp->distinct[0]->nnodes);
-        else                         min_blen = 1./(tsp->distinct[0]->nleaves);
+        else                         min_blen = 1./(double)(tsp->distinct[0]->nleaves);
         for (j = 0; j < tsp->distinct[0]->nnodes; j++) blens[j] = min_blen;
       }
     }
@@ -107,7 +107,7 @@ maximum_tree (char_vector sptaxa, char **filename, int nfiles, bool branch_lengt
     del_topology_space (tsp); /* reuse alignment and distance_matrix pointers */
     del_distance_matrix (genedist);
   }
-  /* now spdist has the minimum distances between species on upper and mean on lower */
+  /* now spdist have the minimum distances between species across loci on upper and mean on lower */
   del_distance_matrix (spdist_local);
   if (bool_sp) free (bool_sp);
 
@@ -115,12 +115,12 @@ maximum_tree (char_vector sptaxa, char **filename, int nfiles, bool branch_lengt
   for (i = 0; i < spdist1->size; i++) for (j = 0; j < i; j++) if (counter_mat->d[i][j] > 0.) {
     spdist1->d[i][j] /= counter_mat->d[i][j];
     spdist2->d[i][j] /= counter_mat->d[i][j];
+    if (dist_of_missing_pairs < spdist1->d[i][j]) dist_of_missing_pairs = spdist1->d[i][j];
+    if (dist_of_missing_pairs < spdist2->d[i][j]) dist_of_missing_pairs = spdist2->d[i][j]; /* maximum possible distance */
   }
-/*  for (i = 0; i < spdist1->size; i++) for (j = 0; j < i; j++) if (freq_sp[i] && freq_sp[j]) {
- *   spdist1->d[i][j] /= (double)(freq_sp[i] * freq_sp[j]);
- *   spdist2->d[i][j] /= (double)(freq_sp[i] * freq_sp[j]);
- * }
- */
+  for (i = 0; i < spdist1->size; i++) for (j = 0; j < i; j++) if (counter_mat->d[i][j] < 0.1) { /* pair was never seen together */
+    spdist1->d[i][j] =   spdist1->d[j][i] =   spdist2->d[i][j] =   spdist2->d[j][i] = dist_of_missing_pairs;
+  } 
   /* search for non-represented species */
   idx = (int *) biomcmc_realloc ((int*) idx, sptaxa->nstrings * sizeof (int));
   n_idx = 0;
@@ -139,20 +139,20 @@ maximum_tree (char_vector sptaxa, char **filename, int nfiles, bool branch_lengt
   maxtree = new_topology (sptaxa->nstrings);
   maxtree->taxlabel = sptaxa;
   sptaxa->ref_counter++; /* sptaxa is pointed here and at the calling function */
- 
 
-  if (branch_length_mode == 0) printf ("[using node distances, neglect branch lengths]\n");
+  if (branch_length_mode == 0) printf ("[using node distances, neglecting branch lengths]\n");
   else if (branch_length_mode == 1) printf ("[using original branch lengths from trees]\n");
-  else printf ("[using rescaled branch lengths s.t. tree length is one]\n");
+  else printf ("[using rescaled branch lengths s.t. sum of branches equal number of nodes (like nodal distance)]\n");
  /* GLASS (min across loci, mins within locus) --> single-linkage JComputBiol.2012.632.pdf */
-//  upgma_from_distance_matrix (maxtree, spdist1, true); /* always uses upper triangular  (false=UPGMA; true=single-linkage) */
+  //upgma_from_distance_matrix (maxtree, spdist1, true); /* always uses upper triangular  (false=UPGMA; true=single-linkage) */
   upgma_from_distance_matrix (maxtree, spdist1, false); /* original algo uses single-linkage but UPGMA better */
   s = topology_to_string_by_name (maxtree, maxtree->blength); /* second parameter is vector with branch lengths */
   printf ("[GLASS SPTREE] %s;\n",s); fflush(stdout); free (s);
   
   transpose_distance_matrix (spdist1); /* lower triangular available to upgma() -- which uses upper diagonal always */
  /* STEAC (mean across loci, means within locus) --> upgma JComputBiol.2012.632.pdf */
-  upgma_from_distance_matrix (maxtree, spdist1, false); /* always uses upper triangular  (false=UPGMA; true=single-linkage) */
+  //upgma_from_distance_matrix (maxtree, spdist1, false); /* always uses upper triangular  (false=UPGMA; true=single-linkage) */
+  bionj_from_distance_matrix (maxtree, spdist1); // original uses UPGMA but bioNJ better 
   s = topology_to_string_by_name (maxtree, maxtree->blength); /* second parameter is vector with branch lengths */
   printf ("[STEAC SPTREE] %s;\n",s); fflush(stdout); free (s);
 
@@ -164,7 +164,8 @@ maximum_tree (char_vector sptaxa, char **filename, int nfiles, bool branch_lengt
   
   transpose_distance_matrix (spdist2); /* lower triangular available to upgma() -- which uses upper diagonal always */
   /* SD (means across loci, min within locus) --> upgma JComputBiol.2012.632.pdf */
-  upgma_from_distance_matrix (maxtree, spdist2, false); /* always uses upper triangular  (false=UPGMA; true=single-linkage) */
+  //upgma_from_distance_matrix (maxtree, spdist2, false); /* always uses upper triangular  (false=UPGMA; true=single-linkage) */
+  bionj_from_distance_matrix (maxtree, spdist2); /* original uses UPGMA but bioNJ better in some test cases  */ 
   s = topology_to_string_by_name (maxtree, maxtree->blength); /* second parameter is vector with branch lengths */
   printf ("[SD    SPTREE] %s;\n",s); fflush(stdout); free (s);
 
