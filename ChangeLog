@@ -2,7 +2,6 @@
 		* bioNJ implemented: seems to work, and works better than UPGMA for STEAC, SD (that use 'mean' across loci).
 		Equivalently, UPGMA performed better than single-linkage for Glass, MAC (that use 'min' across loci). 
 		* maxtree bug: when a comparison pair is absent from all gene families, I set a large distance. (Ideally I could
-		calculate average/max for each species from pair) 
 2018.03.09
 		* main_maxtree: fixed averaging across loci (mean is divided by number of pair comparisons N_ij and not overall
 		representativity of each species N_i x N_j). Also each locus-wise spmatrix is rescaled to have largest distance

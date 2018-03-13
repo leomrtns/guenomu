@@ -414,6 +414,19 @@ update_species_dists_from_spdist (distance_matrix global, distance_matrix local,
 }
 
 void
+update_species_dists_from_spdist_both_means (distance_matrix global, distance_matrix local, distance_matrix counter, int *spexist)
+{ 
+  int i, j;
+  if (global->size != local->size) biomcmc_error ("species distance matrices have different sizes within and across loci");
+
+  for (i = 0; i < local->size; i++) for (j = 0; j < i; j++) if (spexist[i] && spexist[j]) { 
+    global->d[j][i] += local->d[j][i]; /* just the sum; to have the mean we need to divide by representativity of each species across loci */
+    global->d[i][j] += local->d[i][j]; /* that is why we need the counter below */ 
+    if (counter) { counter->d[i][j] += 1.; counter->d[j][i] += 1.; }
+  }
+}
+
+void
 create_parent_node_from_children (topology tree, int parent, int lchild, int rchild)
 {
   tree->nodelist[parent]->left  = tree->nodelist[lchild];

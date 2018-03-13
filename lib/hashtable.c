@@ -331,8 +331,18 @@ zero_lower_distance_matrix (distance_matrix dist)
 {
   int i, j;
   for (i = 1; i < dist->size; i++) for (j = 0; j < i; j++) {
-    dist->d[i][j] = 0.; /* lower triangular can be used for mean values (in gene/sptree distances) */
+    dist->d[i][j] = 0.; /* lower triangular used for mean values (in gene/sptree distances) */
     dist->d[j][i] = 1.e35; /* upper triangular is usually for minimum values */
+  }
+}
+
+void
+set_distance_matrix_diagonals_to_values (distance_matrix dist, double upper, double lower, double diags)
+{
+  int i, j;
+  for (i = 0; i < dist->size; i++) {
+    dist->d[i][i] = diags; 
+    for (j = 0; j < i; j++) {  dist->d[i][j] = lower; dist->d[j][i] = upper; }
   }
 }
 

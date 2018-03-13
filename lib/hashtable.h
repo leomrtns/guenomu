@@ -106,6 +106,8 @@ uint32_t biomcmc_hashstring_5 (unsigned char *str); /* sdbm algorithm */
 distance_matrix new_distance_matrix (int nseqs);
 /*! \brief specially in gene/sptree distance methods (GLASS, STEAC, etc.) lower is used for means and upper for min. This function resets matrix elements */
 void zero_lower_distance_matrix (distance_matrix dist);
+/*! \brief set distance matrix upper diag, lower diag, and diagonals to specified values (generalisation of zero_lower_() */
+void set_distance_matrix_diagonals_to_values (distance_matrix dist, double upper, double lower, double diags);
 /*! \brief invert lower and upper diagonals of matrix (since some functions like upgma expect upper, etc.) */
 void transpose_distance_matrix (distance_matrix dist);
 /*! \brief releases memory allocated to distance_matrix (this structure has no smart ref_counter) */
