@@ -272,6 +272,7 @@ new_topology_space (void)
   tsp->ndistinct = tsp->ntrees = 0;
   tsp->tree = tsp->distinct = NULL;
   tsp->taxlabel = NULL;
+  tsp->taxlabel_hash = NULL;
   tsp->filename = NULL;
   tsp->has_branch_lengths = false;
   /* tsp->dinstinct vector is increased by add_tree_to_topology_space() while tsp->tree are pointers to dsp->distinct
