@@ -1,5 +1,4 @@
-#include <biomcmc.h> 
-
+#include <biomcmc_guenomu.h> 
 
 void damncheck (topology tree);
 

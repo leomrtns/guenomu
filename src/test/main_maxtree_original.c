@@ -1,4 +1,4 @@
-#include <biomcmc.h> 
+#include <biomcmc_guenomu.h> 
 /* This is not the version used in http://dx.doi.org/10.1093/sysbio/syu082 but can be reverted back to it:
  * 1. GLASS: min between loci, min within loci -> single-linkage
  * 2. STEAC: mean between, mean within -> UPGMA 

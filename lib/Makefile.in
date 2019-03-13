@@ -130,7 +130,7 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libbiomcmc_la_LIBADD =
+libbiomcmc_guenomu_la_LIBADD =
 am__objects_1 = hashtable.lo lowlevel.lo random_number_gen.lo \
 	random_number.lo nexus_common.lo alignment.lo \
 	topology_common.lo topology_space.lo topology_mrca.lo \
@@ -138,8 +138,8 @@ am__objects_1 = hashtable.lo lowlevel.lo random_number_gen.lo \
 	prob_distribution.lo empirical_frequency.lo phylogeny.lo \
 	likelihood.lo
 am__objects_2 =
-am_libbiomcmc_la_OBJECTS = $(am__objects_1) $(am__objects_2)
-libbiomcmc_la_OBJECTS = $(am_libbiomcmc_la_OBJECTS)
+am_libbiomcmc_guenomu_la_OBJECTS = $(am__objects_1) $(am__objects_2)
+libbiomcmc_guenomu_la_OBJECTS = $(am_libbiomcmc_guenomu_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -178,8 +178,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libbiomcmc_la_SOURCES)
-DIST_SOURCES = $(libbiomcmc_la_SOURCES)
+SOURCES = $(libbiomcmc_guenomu_la_SOURCES)
+DIST_SOURCES = $(libbiomcmc_guenomu_la_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -348,8 +348,8 @@ common_src = hashtable.c lowlevel.c random_number_gen.c random_number.c nexus_co
                  topology_common.c topology_space.c topology_mrca.c bipartition.c topology_build.c \
                  topology_splitset.c prob_distribution.c empirical_frequency.c phylogeny.c likelihood.c
 
-lib_LTLIBRARIES = libbiomcmc.la
-libbiomcmc_la_SOURCES = $(common_src) $(common_headers) biomcmc.h 
+lib_LTLIBRARIES = libbiomcmc_guenomu.la
+libbiomcmc_guenomu_la_SOURCES = $(common_src) $(common_headers) biomcmc_guenomu.h 
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -435,8 +435,8 @@ clean-libLTLIBRARIES:
 	  rm -f $${locs}; \
 	}
 
-libbiomcmc.la: $(libbiomcmc_la_OBJECTS) $(libbiomcmc_la_DEPENDENCIES) $(EXTRA_libbiomcmc_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(libbiomcmc_la_OBJECTS) $(libbiomcmc_la_LIBADD) $(LIBS)
+libbiomcmc_guenomu.la: $(libbiomcmc_guenomu_la_OBJECTS) $(libbiomcmc_guenomu_la_DEPENDENCIES) $(EXTRA_libbiomcmc_guenomu_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(libbiomcmc_guenomu_la_OBJECTS) $(libbiomcmc_guenomu_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

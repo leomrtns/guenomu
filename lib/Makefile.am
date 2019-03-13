@@ -10,6 +10,6 @@ common_src     = hashtable.c lowlevel.c random_number_gen.c random_number.c nexu
                  topology_common.c topology_space.c topology_mrca.c bipartition.c topology_build.c \
                  topology_splitset.c prob_distribution.c empirical_frequency.c phylogeny.c likelihood.c
 
-lib_LTLIBRARIES = libbiomcmc.la
-libbiomcmc_la_SOURCES = $(common_src) $(common_headers) biomcmc.h 
+lib_LTLIBRARIES = libbiomcmc_guenomu.la
+libbiomcmc_guenomu_la_SOURCES = $(common_src) $(common_headers) biomcmc_guenomu.h 
 

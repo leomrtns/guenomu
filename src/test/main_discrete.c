@@ -1,4 +1,4 @@
-#include <biomcmc.h> 
+#include <biomcmc_guenomu.h> 
 /* test if discrete_sample (from prob_distribution.c) is working properly */
 
 int

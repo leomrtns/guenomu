@@ -1,4 +1,4 @@
-#include <biomcmc.h> 
+#include <biomcmc_guenomu.h> 
 
 int create_dli_vector_with_freqs (int **dli, int *qvec, int qvec_size);
 int compare_triplet_increasing (const void *a, const void *b);

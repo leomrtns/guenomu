@@ -1,7 +1,7 @@
 AM_CPPFLAGS = $(GTKDEPS_CFLAGS) -I$(srcdir)/../../lib @OPENMP_CPPFLAGS@
 AM_CFLAGS = @AM_CFLAGS@  @OPENMP_CFLAGS@
 
-LDADD = $(GTKDEPS_LIBS) ../../lib/libbiomcmc.la $(AM_LDFLAGS)
+LDADD = $(GTKDEPS_LIBS) ../../lib/libbiomcmc_guenomu.la $(AM_LDFLAGS)
 
 bin_PROGRAMS = bmc2_tree bmc2_random bmc2_alignment bmc2_maxtree bmc2_likelihood bmc2_discrete bmc2_addTreeNoise \
 							 bmc2_spr bmc2_align_maxtree

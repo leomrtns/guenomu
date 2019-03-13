@@ -19,7 +19,7 @@
 #ifndef _guenomu_control_file_h_
 #define _guenomu_control_file_h_
 
-#include <biomcmc.h> 
+#include <biomcmc_guenomu.h> 
 #include <argtable2.h>
 
 #ifdef BIOMCMC_MPI

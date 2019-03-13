@@ -1,4 +1,4 @@
-#include <biomcmc.h> 
+#include <biomcmc_guenomu.h> 
 
 /* This is not the version used in http://dx.doi.org/10.1093/sysbio/syu082, which used:
  * 1. GLASS: min between loci, min within loci -> single-linkage (JComputBiol.2012.632.pdf for all below)

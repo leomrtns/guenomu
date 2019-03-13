@@ -1,4 +1,4 @@
-#include <biomcmc.h> 
+#include <biomcmc_guenomu.h> 
 /* input:  tree file distribution, preferencially with branch lengths
  * output: same tree distribution, but with "error" -- that is, each tree will generate several others around it
  * --> the program uses the branch lengths to decide which branches are more prone to swapping  */

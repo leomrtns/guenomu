@@ -112,7 +112,7 @@ am_bmc2_addTreeNoise_OBJECTS = main_addTreeNoise.$(OBJEXT)
 bmc2_addTreeNoise_OBJECTS = $(am_bmc2_addTreeNoise_OBJECTS)
 bmc2_addTreeNoise_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
-bmc2_addTreeNoise_DEPENDENCIES = ../../lib/libbiomcmc.la \
+bmc2_addTreeNoise_DEPENDENCIES = ../../lib/libbiomcmc_guenomu.la \
 	$(am__DEPENDENCIES_1)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -121,41 +121,43 @@ am__v_lt_1 =
 am_bmc2_align_maxtree_OBJECTS = main_align_maxtree.$(OBJEXT)
 bmc2_align_maxtree_OBJECTS = $(am_bmc2_align_maxtree_OBJECTS)
 bmc2_align_maxtree_LDADD = $(LDADD)
-bmc2_align_maxtree_DEPENDENCIES = ../../lib/libbiomcmc.la \
+bmc2_align_maxtree_DEPENDENCIES = ../../lib/libbiomcmc_guenomu.la \
 	$(am__DEPENDENCIES_1)
 am_bmc2_alignment_OBJECTS = main_alignment.$(OBJEXT)
 bmc2_alignment_OBJECTS = $(am_bmc2_alignment_OBJECTS)
 bmc2_alignment_LDADD = $(LDADD)
-bmc2_alignment_DEPENDENCIES = ../../lib/libbiomcmc.la \
+bmc2_alignment_DEPENDENCIES = ../../lib/libbiomcmc_guenomu.la \
 	$(am__DEPENDENCIES_1)
 am_bmc2_discrete_OBJECTS = main_discrete.$(OBJEXT)
 bmc2_discrete_OBJECTS = $(am_bmc2_discrete_OBJECTS)
 bmc2_discrete_LDADD = $(LDADD)
-bmc2_discrete_DEPENDENCIES = ../../lib/libbiomcmc.la \
+bmc2_discrete_DEPENDENCIES = ../../lib/libbiomcmc_guenomu.la \
 	$(am__DEPENDENCIES_1)
 am_bmc2_likelihood_OBJECTS = main_likelihood.$(OBJEXT)
 bmc2_likelihood_OBJECTS = $(am_bmc2_likelihood_OBJECTS)
 bmc2_likelihood_LDADD = $(LDADD)
-bmc2_likelihood_DEPENDENCIES = ../../lib/libbiomcmc.la \
+bmc2_likelihood_DEPENDENCIES = ../../lib/libbiomcmc_guenomu.la \
 	$(am__DEPENDENCIES_1)
 am_bmc2_maxtree_OBJECTS = main_maxtree.$(OBJEXT)
 bmc2_maxtree_OBJECTS = $(am_bmc2_maxtree_OBJECTS)
 bmc2_maxtree_LDADD = $(LDADD)
-bmc2_maxtree_DEPENDENCIES = ../../lib/libbiomcmc.la \
+bmc2_maxtree_DEPENDENCIES = ../../lib/libbiomcmc_guenomu.la \
 	$(am__DEPENDENCIES_1)
 am_bmc2_random_OBJECTS = main_random.$(OBJEXT)
 bmc2_random_OBJECTS = $(am_bmc2_random_OBJECTS)
 bmc2_random_LDADD = $(LDADD)
-bmc2_random_DEPENDENCIES = ../../lib/libbiomcmc.la \
+bmc2_random_DEPENDENCIES = ../../lib/libbiomcmc_guenomu.la \
 	$(am__DEPENDENCIES_1)
 am_bmc2_spr_OBJECTS = main_spr.$(OBJEXT)
 bmc2_spr_OBJECTS = $(am_bmc2_spr_OBJECTS)
 bmc2_spr_LDADD = $(LDADD)
-bmc2_spr_DEPENDENCIES = ../../lib/libbiomcmc.la $(am__DEPENDENCIES_1)
+bmc2_spr_DEPENDENCIES = ../../lib/libbiomcmc_guenomu.la \
+	$(am__DEPENDENCIES_1)
 am_bmc2_tree_OBJECTS = main_tree.$(OBJEXT)
 bmc2_tree_OBJECTS = $(am_bmc2_tree_OBJECTS)
 bmc2_tree_LDADD = $(LDADD)
-bmc2_tree_DEPENDENCIES = ../../lib/libbiomcmc.la $(am__DEPENDENCIES_1)
+bmc2_tree_DEPENDENCIES = ../../lib/libbiomcmc_guenomu.la \
+	$(am__DEPENDENCIES_1)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -357,7 +359,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CPPFLAGS = $(GTKDEPS_CFLAGS) -I$(srcdir)/../../lib @OPENMP_CPPFLAGS@
-LDADD = $(GTKDEPS_LIBS) ../../lib/libbiomcmc.la $(AM_LDFLAGS)
+LDADD = $(GTKDEPS_LIBS) ../../lib/libbiomcmc_guenomu.la $(AM_LDFLAGS)
 bmc2_tree_SOURCES = main_tree.c
 bmc2_random_SOURCES = main_random.c
 bmc2_maxtree_SOURCES = main_maxtree.c

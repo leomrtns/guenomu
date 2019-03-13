@@ -1,4 +1,4 @@
-#include <biomcmc.h> 
+#include <biomcmc_guenomu.h> 
 
 /* this version uses alignments (Kimura distances), NOT gene trees 
  * OBS: this is an experimental program, that gave rise to the tree-based maxtree program. 

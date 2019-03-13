@@ -112,8 +112,8 @@ am_guenomu_OBJECTS = $(am__objects_1) $(am__objects_2)
 guenomu_OBJECTS = $(am_guenomu_OBJECTS)
 guenomu_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
-guenomu_DEPENDENCIES = ../lib/libbiomcmc.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+guenomu_DEPENDENCIES = ../lib/libbiomcmc_guenomu.la \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -353,7 +353,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CPPFLAGS = $(GTKDEPS_CFLAGS) -I$(srcdir)/../lib @OPENMP_CPPFLAGS@ $(MPI_CXXFLAGS) @DEF_MPI@
-LDADD = $(GTKDEPS_LIBS) ../lib/libbiomcmc.la $(AM_LDFLAGS) $(ARGTABLE2_LIBS)
+LDADD = $(GTKDEPS_LIBS) ../lib/libbiomcmc_guenomu.la $(AM_LDFLAGS) $(ARGTABLE2_LIBS)
 guenomu_headers = mcmc_chain_common.h mcmc_chain_proposal.h control_file.h checkpoint_file.h main.h
 guenomu_src = mcmc_chain_common.c mcmc_chain_proposal.c control_file.c checkpoint_file.c main.c
 guenomu_SOURCES = $(guenomu_src) $(guenomu_headers)
