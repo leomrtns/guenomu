@@ -1,4 +1,5 @@
 #include "main.h"
+#include "multiple_species.h"
 
 void print_usage (char *progname);
 void print_presentation (control_file ctrl);
@@ -24,8 +25,10 @@ main (int argc, char **argv)
 #ifdef BIOMCMC_MPI
   setup_parallel_environment (ctrl);
 #endif
+  if (ctrl->n_species_trees != 1)
+    main_multiple_species (ctrl, ctrl->n_species_trees, ctrl->species_rf_max, ctrl->species_weight_alpha);
+  else {
   print_presentation (ctrl);
- 
   switch (ctrl->action) {
   case (ActionStartSampling):      main_start_sampling      (ctrl); break;
   case (ActionResumeSampling):     main_resume_sampling     (ctrl); break;
@@ -34,6 +37,7 @@ main (int argc, char **argv)
   case (ActionSamplePrior):        main_sample_prior        (ctrl); break;
   case (ActionImportanceSampling): main_importance_sampling (ctrl); break;
   default: main_start_sampling (ctrl); break;
+  }
   }
 
   del_control_file (ctrl);

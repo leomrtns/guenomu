@@ -108,7 +108,8 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am__objects_1 = mcmc_chain_common.$(OBJEXT) \
 	mcmc_chain_proposal.$(OBJEXT) control_file.$(OBJEXT) \
-	checkpoint_file.$(OBJEXT) main.$(OBJEXT)
+	checkpoint_file.$(OBJEXT) main.$(OBJEXT) \
+	multiple_species.$(OBJEXT)
 am__objects_2 =
 am_guenomu_OBJECTS = $(am__objects_1) $(am__objects_2)
 guenomu_OBJECTS = $(am_guenomu_OBJECTS)
@@ -138,7 +139,8 @@ am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/checkpoint_file.Po \
 	./$(DEPDIR)/control_file.Po ./$(DEPDIR)/main.Po \
 	./$(DEPDIR)/mcmc_chain_common.Po \
-	./$(DEPDIR)/mcmc_chain_proposal.Po
+	./$(DEPDIR)/mcmc_chain_proposal.Po \
+	./$(DEPDIR)/multiple_species.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -369,8 +371,8 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CPPFLAGS = -I$(srcdir)/../lib -I$(top_builddir)/lib @DEF_MPI@ $(ARGTABLE2_CFLAGS)
 LDADD = ../lib/libbiomcmc_guenomu.la $(ARGTABLE2_LIBS)
-guenomu_headers = mcmc_chain_common.h mcmc_chain_proposal.h control_file.h checkpoint_file.h main.h
-guenomu_src = mcmc_chain_common.c mcmc_chain_proposal.c control_file.c checkpoint_file.c main.c
+guenomu_headers = mcmc_chain_common.h mcmc_chain_proposal.h control_file.h checkpoint_file.h main.h multiple_species.h
+guenomu_src = mcmc_chain_common.c mcmc_chain_proposal.c control_file.c checkpoint_file.c main.c multiple_species.c
 guenomu_SOURCES = $(guenomu_src) $(guenomu_headers)
 SUBDIRS = test
 EXTRA_DIST = template.ctrl
@@ -467,6 +469,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcmc_chain_common.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcmc_chain_proposal.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/multiple_species.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -708,6 +711,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/main.Po
 	-rm -f ./$(DEPDIR)/mcmc_chain_common.Po
 	-rm -f ./$(DEPDIR)/mcmc_chain_proposal.Po
+	-rm -f ./$(DEPDIR)/multiple_species.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -758,6 +762,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/main.Po
 	-rm -f ./$(DEPDIR)/mcmc_chain_common.Po
 	-rm -f ./$(DEPDIR)/mcmc_chain_proposal.Po
+	-rm -f ./$(DEPDIR)/multiple_species.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

@@ -47,6 +47,8 @@ struct control_file_struct {
   double rate_mu, rate_rho;
   double lambda_prior[Ndist]; /* hyper^3 prior for dups, losses, ils */
   double weight_prior;        /* prior for the Dirichlet's concentration parameters (prior shared amongst genes, concent param not) */
+  int n_species_trees;        /* one preserves the published sampler */
+  double species_rf_max, species_weight_alpha; /* experimental pairwise RF bound and family-weight prior */
 
   int n_iter, n_samples, n_burnin, n_output, n_cycles_mtm, n_cycles_heat, n_mc_samples;
   bool update_gene_tree, update_gene_root, update_species_tree, update_species_root;

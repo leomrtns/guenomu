@@ -198,6 +198,9 @@ new_control_file (void)
   ctrl->rate_mu = ctrl->rate_rho = 0.;
   for (k = 0; k < Ndist; k++) ctrl->lambda_prior[k] = 1e-5;
   ctrl->weight_prior = 0.;
+  ctrl->n_species_trees = 1;
+  ctrl->species_rf_max = 0.8;
+  ctrl->species_weight_alpha = 1.;
   ctrl->n_iter = ctrl->n_samples = ctrl->n_burnin = ctrl->n_output = 0;
   ctrl->n_cycles_mtm = ctrl->n_cycles_heat = 0;
   ctrl->n_mc_samples = 2;
@@ -272,6 +275,21 @@ control_file_read_parameter_value (control_file ctrl, char *parameter, char *val
     else if (strcasestr (value, "prio")) ctrl->action = ActionSamplePrior;
     else if (strcasestr (value, "impo")) ctrl->action = ActionImportanceSampling;
     else                                ctrl->action = ActionImportanceSampling;
+  }
+
+  else if (strcasestr (parameter, "n_species_trees")) {
+    if ((n_read = sscanf (value, " %d ", &(ctrl->n_species_trees))) != 1)
+      control_file_read_error (parameter, value, n_read, "one integer");
+  }
+
+  else if (strcasestr (parameter, "species_rf_max")) {
+    if ((n_read = sscanf (value, " %lf ", &(ctrl->species_rf_max))) != 1)
+      control_file_read_error (parameter, value, n_read, "one floating-point number");
+  }
+
+  else if (strcasestr (parameter, "species_weight_alpha")) {
+    if ((n_read = sscanf (value, " %lf ", &(ctrl->species_weight_alpha))) != 1)
+      control_file_read_error (parameter, value, n_read, "one floating-point number");
   }
 
   else if (strcasestr (parameter, "rates_ncat")) {

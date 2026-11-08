@@ -228,7 +228,8 @@ initialize_model_parameters (mcmc_chain chain)
   /* if (chain->ctrl->weight_prior < 1.e-2) prob_term_prior_dist_from_vectors = &prob_term_pdfv_NO_mixture;
   else                                   prob_term_prior_dist_from_vectors = &prob_term_pdfv_mixture; */
   prob_term_prior_dist_from_vectors = &prob_term_pdfv_NO_mixture; // mixture not working 
-  if (chain->ctrl->weight_prior >=1.e-4) printf ("Sorry, mixture model temporarily unavailable\n"); // DEBUG 
+  if ((chain->ctrl->n_species_trees == 1) && (chain->ctrl->weight_prior >=1.e-4))
+    printf ("Sorry, mixture model temporarily unavailable\n"); // DEBUG
   chain->ctrl->weight_prior = 100.;
 
   for (i = 0; i < chain->gs->n_genes; i++) {

@@ -19,3 +19,6 @@
 /biomcmc_guenomu.pc
 *.log
 *.trs
+
+__pycache__/
+*.pyc

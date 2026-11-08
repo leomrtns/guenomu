@@ -1,0 +1,16 @@
+[ Experimental distance mixture; see docs/multiple-species-model.md.
+  Fixed reconciliation scales, omitted component partition functions. ]
+param_execute_action = importance
+param_n_species_trees = 2
+param_species_rf_max = 0.8
+param_species_weight_alpha = 1.0
+param_reconciliation_prior = 0.2
+param_use_distances = 1111000
+param_n_generations = 100 1000
+param_n_samples = 100
+param_n_output = 10
+param_n_mc_samples = 0
+param_file_with_tree_files = list_of_trees.txt
+param_file_with_species_names = list_of_species.txt
+param_random_number_seed = 12345
+end_of_control_file

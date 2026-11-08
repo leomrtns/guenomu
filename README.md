@@ -70,6 +70,10 @@ The [documentation](docs/README.md) uses Docsify. To view it locally, run `pytho
 
 The tag `v0.2-pre-modernization-20261108` preserves the repository before the installation and MPI-output updates.
 
+## Experimental multiple-species-tree model
+
+This branch adds an opt-in multiple-tree sampler; the default remains the published single-tree workflow. See the [usage guide](docs/multiple-species.md), [statistical and genomics report](docs/multiple-species-model.md), and [implementation decisions](docs/multiple-species-decisions.md). The prototype infers a few RF-constrained species trees and per-family weights under a generalized-Bayes distance-mixture target with fixed reconciliation scales. It is **not** the fully normalized generative mixture posterior. No genomic-order extension is included.
+
 ## Limitations
 
 Input trees must be bifurcating. Every gene tip must map to a species name; the existing matching convention searches for species names within gene labels, longest names first. Branch lengths are ignored by the published species-tree model. A leading tree with no branch lengths causes lengths on subsequent trees in that collection to be ignored. Check input labels carefully and inspect independent MCMC runs for convergence.

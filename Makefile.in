@@ -90,8 +90,12 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = tests/test_lowlevel$(EXEEXT)
-TESTS = tests/test_lowlevel$(EXEEXT) tests/check-output.py
+check_PROGRAMS = tests/test_lowlevel$(EXEEXT) \
+	tests/test_multiple_species$(EXEEXT) \
+	tests/test_multiple_species_topology$(EXEEXT)
+TESTS = tests/test_lowlevel$(EXEEXT) tests/check-output.py \
+	tests/test_multiple_species_topology$(EXEEXT) \
+	tests/check-multiple-species.py
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -116,6 +120,23 @@ AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+am__objects_1 = src/control_file.$(OBJEXT) \
+	src/mcmc_chain_common.$(OBJEXT) src/checkpoint_file.$(OBJEXT)
+am_tests_test_multiple_species_OBJECTS =  \
+	tests/test_multiple_species.$(OBJEXT) \
+	src/multiple_species.$(OBJEXT) $(am__objects_1)
+tests_test_multiple_species_OBJECTS =  \
+	$(am_tests_test_multiple_species_OBJECTS)
+am__DEPENDENCIES_1 =
+tests_test_multiple_species_DEPENDENCIES = lib/libbiomcmc_guenomu.la \
+	$(am__DEPENDENCIES_1)
+am_tests_test_multiple_species_topology_OBJECTS =  \
+	tests/test_multiple_species_topology.$(OBJEXT) \
+	$(am__objects_1)
+tests_test_multiple_species_topology_OBJECTS =  \
+	$(am_tests_test_multiple_species_topology_OBJECTS)
+tests_test_multiple_species_topology_DEPENDENCIES =  \
+	lib/libbiomcmc_guenomu.la $(am__DEPENDENCIES_1)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -131,7 +152,13 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/lib
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = tests/$(DEPDIR)/test_lowlevel.Po
+am__depfiles_remade = src/$(DEPDIR)/checkpoint_file.Po \
+	src/$(DEPDIR)/control_file.Po \
+	src/$(DEPDIR)/mcmc_chain_common.Po \
+	src/$(DEPDIR)/multiple_species.Po \
+	tests/$(DEPDIR)/test_lowlevel.Po \
+	tests/$(DEPDIR)/test_multiple_species.Po \
+	tests/$(DEPDIR)/test_multiple_species_topology.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -151,8 +178,12 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(tests_test_lowlevel_SOURCES)
-DIST_SOURCES = $(tests_test_lowlevel_SOURCES)
+SOURCES = $(tests_test_lowlevel_SOURCES) \
+	$(tests_test_multiple_species_SOURCES) \
+	$(tests_test_multiple_species_topology_SOURCES)
+DIST_SOURCES = $(tests_test_lowlevel_SOURCES) \
+	$(tests_test_multiple_species_SOURCES) \
+	$(tests_test_multiple_species_topology_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -596,16 +627,29 @@ top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = lib src
 EXTRA_DIST = README.md docs examples bootstrap biomcmc_guenomu.pc.in \
-	tests/check-output.py tests/run-python.sh
+	tests/check-output.py tests/run-python.sh \
+	tests/check-multiple-species.py
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = biomcmc_guenomu.pc
-AM_CPPFLAGS = -I$(srcdir)/lib -I$(top_builddir)/lib
+AM_CPPFLAGS = -I$(srcdir)/lib -I$(top_builddir)/lib -I$(srcdir)/src @DEF_MPI@ $(ARGTABLE2_CFLAGS)
 TEST_EXTENSIONS = .py
 PY_LOG_COMPILER = $(SHELL) $(srcdir)/tests/run-python.sh $(PYTHON)
 tests_test_lowlevel_SOURCES = tests/test_lowlevel.c
 tests_test_lowlevel_LDADD = lib/libbiomcmc_guenomu.la
-@USE_MPI_FALSE@AM_TESTS_ENVIRONMENT = GUENOMU_SERIAL='$(abs_top_builddir)/src/guenomu'; export GUENOMU_SERIAL;
-@USE_MPI_TRUE@AM_TESTS_ENVIRONMENT = GUENOMU_MPI='$(abs_top_builddir)/src/guenomu'; export GUENOMU_MPI;
+@USE_MPI_FALSE@AM_TESTS_ENVIRONMENT = GUENOMU_SERIAL='$(abs_top_builddir)/src/guenomu'; \
+@USE_MPI_FALSE@	export GUENOMU_SERIAL; \
+@USE_MPI_FALSE@	GUENOMU_MULTIPLE_TEST='$(abs_top_builddir)/tests/test_multiple_species'; \
+@USE_MPI_FALSE@	export GUENOMU_MULTIPLE_TEST;
+@USE_MPI_TRUE@AM_TESTS_ENVIRONMENT =  \
+@USE_MPI_TRUE@	GUENOMU_MPI='$(abs_top_builddir)/src/guenomu'; \
+@USE_MPI_TRUE@	export GUENOMU_MPI; \
+@USE_MPI_TRUE@	GUENOMU_MULTIPLE_TEST='$(abs_top_builddir)/tests/test_multiple_species'; \
+@USE_MPI_TRUE@	export GUENOMU_MULTIPLE_TEST;
+multiple_test_sources = src/control_file.c src/mcmc_chain_common.c src/checkpoint_file.c
+tests_test_multiple_species_SOURCES = tests/test_multiple_species.c src/multiple_species.c $(multiple_test_sources)
+tests_test_multiple_species_LDADD = lib/libbiomcmc_guenomu.la $(ARGTABLE2_LIBS)
+tests_test_multiple_species_topology_SOURCES = tests/test_multiple_species_topology.c $(multiple_test_sources)
+tests_test_multiple_species_topology_LDADD = lib/libbiomcmc_guenomu.la $(ARGTABLE2_LIBS)
 all: all-recursive
 
 .SUFFIXES:
@@ -661,15 +705,48 @@ tests/test_lowlevel.$(OBJEXT): tests/$(am__dirstamp) \
 tests/test_lowlevel$(EXEEXT): $(tests_test_lowlevel_OBJECTS) $(tests_test_lowlevel_DEPENDENCIES) $(EXTRA_tests_test_lowlevel_DEPENDENCIES) tests/$(am__dirstamp)
 	@rm -f tests/test_lowlevel$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(tests_test_lowlevel_OBJECTS) $(tests_test_lowlevel_LDADD) $(LIBS)
+tests/test_multiple_species.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+src/$(am__dirstamp):
+	@$(MKDIR_P) src
+	@: >>src/$(am__dirstamp)
+src/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) src/$(DEPDIR)
+	@: >>src/$(DEPDIR)/$(am__dirstamp)
+src/multiple_species.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+src/control_file.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+src/mcmc_chain_common.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+src/checkpoint_file.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+
+tests/test_multiple_species$(EXEEXT): $(tests_test_multiple_species_OBJECTS) $(tests_test_multiple_species_DEPENDENCIES) $(EXTRA_tests_test_multiple_species_DEPENDENCIES) tests/$(am__dirstamp)
+	@rm -f tests/test_multiple_species$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(tests_test_multiple_species_OBJECTS) $(tests_test_multiple_species_LDADD) $(LIBS)
+tests/test_multiple_species_topology.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+
+tests/test_multiple_species_topology$(EXEEXT): $(tests_test_multiple_species_topology_OBJECTS) $(tests_test_multiple_species_topology_DEPENDENCIES) $(EXTRA_tests_test_multiple_species_topology_DEPENDENCIES) tests/$(am__dirstamp)
+	@rm -f tests/test_multiple_species_topology$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(tests_test_multiple_species_topology_OBJECTS) $(tests_test_multiple_species_topology_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
+	-rm -f src/*.$(OBJEXT)
 	-rm -f tests/*.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/checkpoint_file.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/control_file.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/mcmc_chain_common.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/multiple_species.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_lowlevel.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_multiple_species.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_multiple_species_topology.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -1011,6 +1088,13 @@ tests/test_lowlevel.log: tests/test_lowlevel$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+tests/test_multiple_species_topology.log: tests/test_multiple_species_topology$(EXEEXT)
+	@p='tests/test_multiple_species_topology$(EXEEXT)'; \
+	b='tests/test_multiple_species_topology'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 .py.log:
 	@p='$<'; \
 	$(am__set_b); \
@@ -1261,6 +1345,8 @@ clean-generic:
 distclean-generic:
 	-$(am__rm_f) $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || $(am__rm_f) $(CONFIG_CLEAN_VPATH_FILES)
+	-$(am__rm_f) src/$(DEPDIR)/$(am__dirstamp)
+	-$(am__rm_f) src/$(am__dirstamp)
 	-$(am__rm_f) tests/$(DEPDIR)/$(am__dirstamp)
 	-$(am__rm_f) tests/$(am__dirstamp)
 
@@ -1274,7 +1360,13 @@ clean-am: clean-checkPROGRAMS clean-generic clean-libtool \
 
 distclean: distclean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
+	-rm -f src/$(DEPDIR)/checkpoint_file.Po
+	-rm -f src/$(DEPDIR)/control_file.Po
+	-rm -f src/$(DEPDIR)/mcmc_chain_common.Po
+	-rm -f src/$(DEPDIR)/multiple_species.Po
 	-rm -f tests/$(DEPDIR)/test_lowlevel.Po
+	-rm -f tests/$(DEPDIR)/test_multiple_species.Po
+	-rm -f tests/$(DEPDIR)/test_multiple_species_topology.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-libtool distclean-tags
@@ -1322,7 +1414,13 @@ installcheck-am:
 maintainer-clean: maintainer-clean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -rf $(top_srcdir)/autom4te.cache
+	-rm -f src/$(DEPDIR)/checkpoint_file.Po
+	-rm -f src/$(DEPDIR)/control_file.Po
+	-rm -f src/$(DEPDIR)/mcmc_chain_common.Po
+	-rm -f src/$(DEPDIR)/multiple_species.Po
 	-rm -f tests/$(DEPDIR)/test_lowlevel.Po
+	-rm -f tests/$(DEPDIR)/test_multiple_species.Po
+	-rm -f tests/$(DEPDIR)/test_multiple_species_topology.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

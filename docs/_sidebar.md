@@ -3,6 +3,10 @@
 - [Output and MPI](output.md)
 - [Development and testing](development.md)
 - [Maintenance changes](release-notes.md)
+- Experimental model
+  - [Multiple species trees](multiple-species.md)
+  - [Statistical and genomics report](multiple-species-model.md)
+  - [Implementation decisions](multiple-species-decisions.md)
 - Publications
   - [Model paper](papers/paper001_guenomu.md)
   - [Software chapter](papers/paper002_guenomu.md)
