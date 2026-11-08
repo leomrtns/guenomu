@@ -33,6 +33,8 @@ struct topology_space_struct
   double *tlen;              /*! \brief tree length (mean, min, max), since branch lengths will be scaled s.t. sum up to one */
   char_vector taxlabel;      /*! \brief Taxon names. */
   hashtable taxlabel_hash;   /*! \brief Lookup table with taxon names. */
+  bool has_complete_internal_lengths; /* informative unrooted internal edges, including both root halves */
+  bool has_complete_branch_lengths; /* all nonroot edges explicitly finite and nonnegative */
   bool has_branch_lengths;   /*! \brief if false, then topology_space_struct::tree = topology_space_struct:distinct */
   char *filename;            /*! \brief name (without extension) of the originating file from where topology_space was read */
 };

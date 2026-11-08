@@ -7,6 +7,9 @@
   - [Multiple species trees](multiple-species.md)
   - [Statistical and genomics report](multiple-species-model.md)
   - [Implementation decisions](multiple-species-decisions.md)
+  - [Gene-tree inputs](tree-inputs.md)
+  - [Branch-length uncertainty](branch-length-uncertainty.md)
+  - [Research review](research-review.md)
 - Publications
   - [Model paper](papers/paper001_guenomu.md)
   - [Software chapter](papers/paper002_guenomu.md)

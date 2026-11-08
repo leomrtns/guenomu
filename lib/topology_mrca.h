@@ -54,21 +54,16 @@ void init_tree_recon_from_species_topology (topology gene, topology species);
 /*! \brief initialize reconciliation_struct when we only know the species taxon names */
 void init_tree_recon_from_species_names (topology gene, char_vector sptaxlabel);
 
-/*! \brief find occurences of species->string[] inside gene->string[] filling indexes in sp_idx_in_gene.
+/*! \brief Match each gene label to its unique longest case-insensitive species substring.
  *
- *  The species are taxon names which may be associated with topologies or alignments, such that we can not reorder its
- *  elements from longer to shorter (which is essential for pattern finding). So we must use a local or external vector
- *  with the mapping between original and sorted species names. If this function (and not the
- *  index_sptaxa_to_reconciliation() below) is used, the initialization of rec->sp_count[] must be done by hand (by
- *  calling initialize_reconciliation_sp_count()). */
+ * Species labels must be distinct ignoring case. Unknown genes and equal-longest
+ * ambiguous matches are errors. Actual label lengths are used; string-vector
+ * allocation capacities and input order do not affect matching. ef_external is
+ * retained for existing callers but is not needed. Call
+ * initialize_reconciliation_sp_count() separately when using this function. */
 void index_sptaxa_to_genetaxa (char_vector species, char_vector gene, int *sp_idx_in_gene, empfreq ef_external);
-/*! \brief find occurences of ordered species->string[] inside gene->string[] filling indexes in rec->sp_id[] and updating
- * rec->sp_count[]. 
- *
- *  This function can only be used whe we know that the species names are ordered from longer to shorter. This happens
- *  only when there are no topologies (where the leaves are the indexes of taxlabel) associated with the species'
- *  taxlabels. So they cannot be used within a topology_space_struct but can be used if our primary data is only these
- *  taxlabels (like in the guenomu MCMC algrithm). Calls initialize_reconciliation_sp_count() automatically. */
+/*! \brief Apply the same unique-longest matching and initialize reconciliation copy counts.
+ * Species label order is preserved and need not be sorted by name length. */
 void index_sptaxa_to_reconciliation (char_vector species, char_vector gene, reconciliation rec);
 
 /*! \brief Fill rec->sp_count[] with the number of representatives of each species (idexed by rec->sp_id[]) */

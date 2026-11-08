@@ -14,7 +14,7 @@ param_execute_action = importance
 param_n_mc_samples = 0
 ```
 
-The input gene-tree and species-name lists use the existing formats. The original parser accepts the `importance` action prefix `import`, as in the supplied examples. `param_n_species_trees = 1` selects the original sampler; the experimental mode supports two to eight trees.
+Gene-tree files can contain plain Newick or NEXUS collections; see [input formats and mapping](tree-inputs.md). Species-name lists retain their existing format. The original parser accepts the `importance` action prefix `import`, as in the supplied examples. `param_n_species_trees = 1` selects the original sampler; the experimental mode supports two to eight trees.
 
 The RF upper fraction must lie strictly between zero and one. All trees must have the same represented species labels. At least five represented species are required, and the bound must allow a positive RF distance. Every pair must differ in unrooted topology while retaining at least one nontrivial split in common.
 
@@ -45,7 +45,7 @@ No separate analysis invocation is required. The mode writes its sampled states 
 - `weight_G_K`: simplex weight for original input family G and component K.
 - `support_G_K`: normalized family support for component K, combining its weight and its integrated distance-kernel score.
 
-Family and component indices start at zero. Every family's weights sum to one and its supports sum to one, up to floating-point rounding. The support values are conditional on this target and do not establish probabilities for a fully normalized generative tree model.
+Family and component indices start at zero. Every family's weights sum to one and its supports sum to one, up to floating-point rounding. Very small text-output weights can round to zero; their internal logarithms remain finite. The support values are conditional on this target and do not establish probabilities for a fully normalized generative tree model.
 
 `multiple.tree0.trees`, `multiple.tree1.trees`, and subsequent component files contain sampled Newick trees with iteration comments. These are direct samples, not the legacy ranked tree-probability summaries. Tree and weight labels refer to the same component within a sample. Component labels are exchangeable across the posterior and across independent runs; do not average label-specific weights without checking relabelling.
 
@@ -56,3 +56,7 @@ MPI ranks share the full species-tree collection and reduce their local family s
 The software exercises the multiple-tree state, the constrained prior, all-family mixture links, local weight moves and MPI score aggregation while reusing the original tree and reconciliation structures. Local rooted-NNI proposals are supplemented by a 5% independent full-tuple proposal, because the constrained local topology graph can be disconnected. The global move restores reachability in principle, but may be accepted rarely for difficult RF constraints. It integrates over each supplied empirical gene-tree collection exactly for the specified kernel.
 
 It does not implement a full normalized distribution over all possible gene trees, learn reconciliation scales, infer the number of histories, establish adequate finite-run mixing under the RF constraint, or validate biological recovery and uncertainty calibration. Those are research requirements before scientific use, not options silently enabled by this mode. See the [model report](multiple-species-model.md) and [implementation decisions](multiple-species-decisions.md).
+
+## Branch lengths and diagnostics
+
+Use the opt-in [branch-length uncertainty kernel](branch-length-uncertainty.md) for a single reference gene tree when an uncertainty ensemble is unavailable. Supplied multi-tree ensembles are preserved. Cumulative NNI and full-tuple proposal attempts, RF-support passes and acceptances are reported at the configured progress intervals and final sweep. These counts help diagnose poor exploration; they do not replace independent chains. See the [research review](research-review.md) for the remaining statistical gaps.

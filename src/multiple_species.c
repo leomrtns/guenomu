@@ -11,7 +11,9 @@ struct multiple_species_struct {
   splitset rf_split;
   int ntrees;
   double rf_max, alpha;
-  double *component, *joint_component, *weight, *score, *proposed;
+  double *component, *joint_component, *logweight, *score, *proposed;
+  unsigned long local_attempted, local_valid, local_accepted;
+  unsigned long joint_attempted, joint_valid, joint_accepted;
 };
 
 static double multiple_species_sum (double value);
@@ -67,6 +69,43 @@ multiple_species_log_mixture (const double *score, const double *weight, int ntr
     else result = biomcmc_logspace_add (result, term);
   }
   return result;
+}
+
+static double
+multiple_species_log_mixture_logweights (const double *score, const double *logweight, int ntrees)
+{
+  int k;
+  double result = -INFINITY;
+  for (k = 0; k < ntrees; k++) result = biomcmc_logspace_add (result, logweight[k] + score[k]);
+  return result;
+}
+
+void
+multiple_species_sample_logweights (const double *score, double alpha, int ntrees, double *logweight)
+{
+  int k, selected = ntrees - 1;
+  double maximum = score[0], sum = 0., draw;
+  for (k = 1; k < ntrees; k++) if (score[k] > maximum) maximum = score[k];
+  for (k = 0; k < ntrees; k++) sum += exp (score[k] - maximum);
+  if (!isfinite (maximum) || !isfinite (alpha) || (alpha <= 0.) || !(sum > 0.))
+    multiple_species_error ("invalid component scores or family-weight concentration");
+  draw = biomcmc_rng_unif () * sum;
+  for (k = 0; k < ntrees; k++) if ((draw -= exp (score[k] - maximum)) < 0.) { selected = k; break; }
+  /* Under the symmetric Dirichlet prior, p(w|S) is a mixture of
+   * Dirichlet(alpha + e_k), with mixing probabilities proportional to A_k.
+   * Sampling the mixture directly gives an independent conditional draw. */
+  for (k = 0; k < ntrees; k++) {
+    double shape = alpha + (k == selected);
+    if (shape < 1.)
+      logweight[k] = log (biomcmc_rng_gamma (shape + 1., 1.)) + log (biomcmc_rng_unif_pos ()) / shape;
+    else logweight[k] = log (biomcmc_rng_gamma (shape, 1.));
+    if (!isfinite (logweight[k])) multiple_species_error ("family-weight concentration exceeds log-space numerical range");
+  }
+  maximum = logweight[0];
+  for (k = 1; k < ntrees; k++) if (logweight[k] > maximum) maximum = logweight[k];
+  sum = 0.;
+  for (k = 0; k < ntrees; k++) sum += exp (logweight[k] - maximum);
+  for (k = 0; k < ntrees; k++) logweight[k] = (logweight[k] - maximum) - log (sum);
 }
 
 bool
@@ -180,24 +219,27 @@ multiple_species_update_tree (struct multiple_species_struct *multi, int index)
   double difference = 0.;
   mcmc_chain chain = multi->chain;
   biomcmc_random_number = chain->ctrl->rng_global;
+  multi->local_attempted++;
   copy_topology_from_topology (multi->proposal, multi->tree[index]);
   multiple_species_nni (multi->proposal);
   if (!multiple_species_valid (multi, multi->proposal, index)) return;
+  multi->local_valid++;
   for (gene = 0; gene < chain->gs->n_genes; gene++) {
     double old = multi->component[gene * k + index];
     multi->proposed[gene] = multiple_species_gene_score (chain, gene, multi->proposal);
     multi->component[gene * k + index] = multi->proposed[gene];
-    difference += multiple_species_log_mixture (multi->component + gene * k, multi->weight + gene * k, k) - multi->score[gene];
+    difference += multiple_species_log_mixture_logweights (multi->component + gene * k, multi->logweight + gene * k, k) - multi->score[gene];
     multi->component[gene * k + index] = old;
   }
   difference = multiple_species_sum (difference);
   if (log (biomcmc_rng_unif_pos ()) < difference) {
     topology pivot = multi->tree[index];
+    multi->local_accepted++;
     multi->tree[index] = multi->proposal;
     multi->proposal = pivot;
     for (gene = 0; gene < chain->gs->n_genes; gene++) {
       multi->component[gene * k + index] = multi->proposed[gene];
-      multi->score[gene] = multiple_species_log_mixture (multi->component + gene * k, multi->weight + gene * k, k);
+      multi->score[gene] = multiple_species_log_mixture_logweights (multi->component + gene * k, multi->logweight + gene * k, k);
     }
   }
 }
@@ -209,15 +251,17 @@ multiple_species_update_joint (struct multiple_species_struct *multi)
   double difference = 0.;
   mcmc_chain chain = multi->chain;
   biomcmc_random_number = chain->ctrl->rng_global;
+  multi->joint_attempted++;
   for (k = 0; k < multi->ntrees; k++) multiple_species_uniform_tree (multi->joint[k]);
   for (k = 0; k < multi->ntrees; k++) for (j = 0; j < k; j++)
     if (!multiple_species_rf_allowed (dSPR_topology_rf (multi->joint[k], multi->joint[j], multi->rf_split),
                                      multi->joint[k]->nleaves, multi->rf_max)) return;
+  multi->joint_valid++;
   for (gene = 0; gene < chain->gs->n_genes; gene++) {
     int offset = gene * multi->ntrees;
     for (k = 0; k < multi->ntrees; k++)
       multi->joint_component[offset + k] = multiple_species_gene_score (chain, gene, multi->joint[k]);
-    difference += multiple_species_log_mixture (multi->joint_component + offset, multi->weight + offset, multi->ntrees) - multi->score[gene];
+    difference += multiple_species_log_mixture_logweights (multi->joint_component + offset, multi->logweight + offset, multi->ntrees) - multi->score[gene];
   }
   difference = multiple_species_sum (difference);
   /* Uniform independent proposals over the complete rooted topology space
@@ -225,6 +269,7 @@ multiple_species_update_joint (struct multiple_species_struct *multi)
    * supplies positive-probability connections between constrained NNI classes. */
   if (log (biomcmc_rng_unif_pos ()) < difference) {
     double *values = multi->component;
+    multi->joint_accepted++;
     multi->component = multi->joint_component;
     multi->joint_component = values;
     for (k = 0; k < multi->ntrees; k++) {
@@ -233,7 +278,7 @@ multiple_species_update_joint (struct multiple_species_struct *multi)
       multi->joint[k] = tree;
     }
     for (gene = 0; gene < chain->gs->n_genes; gene++)
-      multi->score[gene] = multiple_species_log_mixture (multi->component + gene * multi->ntrees, multi->weight + gene * multi->ntrees, multi->ntrees);
+      multi->score[gene] = multiple_species_log_mixture_logweights (multi->component + gene * multi->ntrees, multi->logweight + gene * multi->ntrees, multi->ntrees);
   }
 }
 
@@ -243,20 +288,8 @@ multiple_species_update_weights (struct multiple_species_struct *multi)
   int gene, k = multi->ntrees;
   biomcmc_random_number = multi->chain->ctrl->rng_local;
   for (gene = 0; gene < multi->chain->gs->n_genes; gene++) {
-    int a = biomcmc_rng_unif_int (k), b = biomcmc_rng_unif_int (k - 1);
-    double *w = multi->weight + gene * k, olda = w[a], oldb, delta, score, prior;
-    if (b >= a) b++;
-    oldb = w[b];
-    /* Fixed-width transfer on a pair; proposals outside the simplex are
-     * rejected, not redrawn. This keeps the proposal exactly symmetric. */
-    delta = 0.2 * (biomcmc_rng_unif () - 0.5);
-    w[a] += delta;
-    w[b] -= delta;
-    if ((w[a] <= 0.) || (w[b] <= 0.)) { w[a] = olda; w[b] = oldb; continue; }
-    prior = (multi->alpha - 1.) * (log (w[a]) + log (w[b]) - log (olda) - log (oldb));
-    score = multiple_species_log_mixture (multi->component + gene * k, w, k);
-    if (log (biomcmc_rng_unif_pos ()) < score - multi->score[gene] + prior) multi->score[gene] = score;
-    else { w[a] = olda; w[b] = oldb; }
+    multiple_species_sample_logweights (multi->component + gene * k, multi->alpha, k, multi->logweight + gene * k);
+    multi->score[gene] = multiple_species_log_mixture_logweights (multi->component + gene * k, multi->logweight + gene * k, k);
   }
 }
 
@@ -272,9 +305,9 @@ multiple_species_save (struct multiple_species_struct *multi, int iteration, FIL
     local_score += multi->score[gene];
     for (k = 0; k < multi->ntrees; k++) {
       int idx = gene * multi->ntrees + k;
-      values[offset + 2 * k] = multi->weight[idx];
-      values[offset + 2 * k + 1] = exp (log (multi->weight[idx]) + multi->component[idx] - multi->score[gene]);
-      local_score += (multi->alpha - 1.) * log (multi->weight[idx]);
+      values[offset + 2 * k] = exp (multi->logweight[idx]);
+      values[offset + 2 * k + 1] = exp (multi->logweight[idx] + multi->component[idx] - multi->score[gene]);
+      local_score += (multi->alpha - 1.) * multi->logweight[idx];
     }
   }
   score = multiple_species_sum (local_score);
@@ -313,6 +346,7 @@ main_multiple_species (control_file ctrl, int ntrees, double rf_max, double alph
   chain = new_mcmc_chain_from_control_file (ctrl);
   if ((chain->gs->spTree->nleaves < 5) || (rf_max * (2 * chain->gs->spTree->nleaves - 6) < 2.))
     multiple_species_config_error ("RF prior is empty: distinct trees with a shared internal split need at least five represented species and an RF upper bound allowing distance 2");
+  memset (&multi, 0, sizeof (multi));
   multi.chain = chain;
   multi.ntrees = ntrees;
   multi.rf_max = rf_max;
@@ -348,7 +382,7 @@ main_multiple_species (control_file ctrl, int ntrees, double rf_max, double alph
   new_mrca_for_topology (multi.proposal);
   multi.component = biomcmc_malloc (ntrees * chain->gs->n_genes * sizeof (double));
   multi.joint_component = biomcmc_malloc (ntrees * chain->gs->n_genes * sizeof (double));
-  multi.weight = biomcmc_malloc (ntrees * chain->gs->n_genes * sizeof (double));
+  multi.logweight = biomcmc_malloc (ntrees * chain->gs->n_genes * sizeof (double));
   multi.score = biomcmc_malloc (chain->gs->n_genes * sizeof (double));
   multi.proposed = biomcmc_malloc (chain->gs->n_genes * sizeof (double));
   /* Match the fixed scales exactly to control-file values, not a transient
@@ -356,10 +390,10 @@ main_multiple_species (control_file ctrl, int ntrees, double rf_max, double alph
   for (gene = 0; gene < chain->gs->n_genes; gene++) {
     for (i = 0; i < chain->ndist; i++) chain->model.lambda[gene * chain->ndist + i] = chain->model.lambda_0[i];
     for (k = 0; k < ntrees; k++) {
-      multi.weight[gene * ntrees + k] = 1. / ntrees;
+      multi.logweight[gene * ntrees + k] = -log ((double) ntrees);
       multi.component[gene * ntrees + k] = multiple_species_gene_score (chain, gene, multi.tree[k]);
     }
-    multi.score[gene] = multiple_species_log_mixture (multi.component + gene * ntrees, multi.weight + gene * ntrees, ntrees);
+    multi.score[gene] = multiple_species_log_mixture_logweights (multi.component + gene * ntrees, multi.logweight + gene * ntrees, ntrees);
   }
   if (root) {
     char name[128];
@@ -378,6 +412,11 @@ main_multiple_species (control_file ctrl, int ntrees, double rf_max, double alph
     biomcmc_random_number = ctrl->rng_global;
     if (biomcmc_rng_unif () < 0.05) multiple_species_update_joint (&multi);
     multiple_species_update_weights (&multi);
+    if (root && ((i + 1 == ctrl->n_burnin + ctrl->n_iter) ||
+                 ((ctrl->n_output > 0) && !((i + 1) % ctrl->n_output))))
+      fprintf (stderr, "multiple-tree sweep %d/%d: NNI accepted %lu/%lu (%lu in RF support); joint accepted %lu/%lu (%lu in RF support)\n",
+               i + 1, ctrl->n_burnin + ctrl->n_iter, multi.local_accepted, multi.local_attempted, multi.local_valid,
+               multi.joint_accepted, multi.joint_attempted, multi.joint_valid);
     if ((i >= ctrl->n_burnin) && !((i - ctrl->n_burnin + 1) % ctrl->n_samples))
       multiple_species_save (&multi, i - ctrl->n_burnin + 1, params, trees);
   }
@@ -394,7 +433,7 @@ main_multiple_species (control_file ctrl, int ntrees, double rf_max, double alph
   free (trees);
   free (multi.component);
   free (multi.joint_component);
-  free (multi.weight);
+  free (multi.logweight);
   free (multi.score);
   free (multi.proposed);
   del_mcmc_chain (chain);

@@ -7,6 +7,7 @@
 void main_multiple_species (control_file ctrl, int ntrees, double rf_max, double alpha);
 double multiple_species_log_mixture (const double *score, const double *weight, int ntrees);
 double multiple_species_gene_score (mcmc_chain chain, int gene, topology species);
+void multiple_species_sample_logweights (const double *score, double alpha, int ntrees, double *logweight);
 bool multiple_species_rf_allowed (int rf, int nleaves, double maximum);
 void multiple_species_nni (topology tree);
 void multiple_species_uniform_tree (topology tree);

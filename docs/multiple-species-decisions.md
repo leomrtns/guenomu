@@ -30,11 +30,11 @@ The default upper fraction is a working interface choice, not a value establishe
 
 A rooted NNI proposal chooses uniformly among the internal nonroot nodes and one of that node's two children to exchange with its sibling. Each move has the corresponding reverse move with the same probability. A proposal outside the RF support is rejected once; it is not repeatedly redrawn until valid. The latter would generally introduce state-dependent conditioning into the proposal.
 
-Weight moves choose two components and transfer a bounded, symmetric random amount between them. A transfer outside the open simplex is rejected. The MH ratio includes the Dirichlet density ratio for concentrations different from one. Initial weights are equal.
+Family weights are sampled independently from their exact conditional distribution: choose a component proportional to its integrated score, then draw Dirichlet weights with one added to that component's concentration. This mixture-of-Dirichlet conditional removes the old transfer-step tuning without changing the target. Log-space Gamma draws preserve finite internal log weights even for sparse priors. Initial weights are equal.
 
 The RF-constrained NNI state graph can be disconnected: a three-component tuple can be trapped in a set that no valid single-component NNI leaves. Therefore local NNI alone is insufficient. After the local proposal for every component in a sweep, the sampler additionally proposes the entire tuple independently with a fixed 5% probability. Each component is drawn uniformly from labelled rooted binary trees using PDA leaf insertion; the joint proposal is uniform over all unconstrained tuples. An invalid tuple is rejected after one draw. The proposal is symmetric, and acceptance uses the full local-family score change reduced across ranks.
 
-Every valid tuple has positive independent proposal probability. With finite energies and positive weights, the target acceptance probability is positive, giving access between all supported tuples. This corrects the reachability defect of local moves, but does not imply rapid mixing: accepted global moves may be rare under tight constraints or for larger problems. Observed tree movement and repeated chains must be inspected; detailed proposal-acceptance counters are not yet exposed by this prototype. Initialization searches for a valid tuple; a search limit is reported as failure to initialize, not proof of impossible support.
+Every valid tuple has positive independent proposal probability. With finite energies and positive weights, the target acceptance probability is positive, giving access between all supported tuples. This corrects the reachability defect of local moves, but does not imply rapid mixing: accepted global moves may be rare under tight constraints or for larger problems. Cumulative attempt, RF-support and acceptance counters are reported for both local and joint proposals. Observed tree movement and repeated chains must also be inspected. Initialization searches for a valid tuple; a search limit is reported as failure to initialize, not proof of impossible support.
 
 ## Independent family weights
 
@@ -51,3 +51,7 @@ The experimental output records direct tree and weight samples as text. It does 
 ## Installation and library use
 
 Autotools is retained because the existing code already uses it and standard configure/build/staged-install commands are suitable for Conda, containers and Galaxy job tools. Installed headers and pkg-config metadata permit C callers without a build-system replacement. The API and ABI remain experimental; this change does not promise a stable extension interface or ship a Galaxy wrapper.
+
+## Branch lengths as input uncertainty
+
+Optional single-tree expansion uses independent unrooted internal-edge contraction followed by uniform refinement. Each draw restarts from the reference; no branch lengths are transported along an arbitrary tree walk. The explicit distribution, units, exported draws and limitations are described in [branch-length uncertainty](branch-length-uncertainty.md). It does not add branch lengths to the reconciliation distance or turn the generalized-Bayes target into a normalized generative model.

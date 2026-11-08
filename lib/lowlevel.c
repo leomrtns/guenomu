@@ -49,6 +49,8 @@ biomcmc_fopen (const char *path, const char *mode)
   return fp;
 }
 
+void (*biomcmc_error_handler) (void) = NULL;
+
 void
 biomcmc_error (const char *template, ...)
 {
@@ -61,6 +63,7 @@ biomcmc_error (const char *template, ...)
   fprintf (stderr, "\n");
   fprintf (stderr, "[note to developers] If you want to debug, set a breakpoint on function biomcmc_error()\n");
   fflush (stderr);
+  if (biomcmc_error_handler) biomcmc_error_handler ();
   exit (EXIT_FAILURE);
 }
 

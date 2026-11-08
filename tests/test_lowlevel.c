@@ -58,6 +58,19 @@ check_tree_output (void)
            "serialize all tip and internal branch lengths");
     free (text);
   }
+  char_vector_add_string_at_position (tree->taxlabel, "A taxon", 0);
+  char_vector_add_string_at_position (tree->taxlabel, "O'Brien", 1);
+  char_vector_add_string_at_position (tree->taxlabel, "C:tip", 2);
+  text = topology_to_string_by_name (tree, NULL);
+  check (!strcmp (text, "(('A taxon','O''Brien'),'C:tip')"), "quote and escape Newick tip labels");
+  free (text);
+  for (i = 0; i < 5; i++) lengths[i] = DBL_MAX;
+  text = topology_to_string_by_name (tree, lengths);
+  check (strlen (text) > 1500, "allocate complete finite long branch lengths");
+  free (text);
+  text = topology_to_string_by_id (tree, lengths);
+  check (strlen (text) > 1500, "allocate numeric tree with long branch lengths");
+  free (text);
   del_topology (tree);
 }
 

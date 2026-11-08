@@ -1,4 +1,5 @@
-#include "mcmc_chain_common.h" 
+#include "mcmc_chain_common.h"
+#include "gene_tree_uncertainty.h"
 
 bool active_dist[Ndist];
 
@@ -97,6 +98,9 @@ initialize_gene_species (mcmc_chain chain)
 
   for (i = 0; i < chain->gs->n_genes; i++) { /* scan through gene tree files (ASSUMES importance sampling) */
     chain->treespace[i] = read_topology_space_from_file (gene->string[i], NULL); /* NULL -> create hashtable */
+    gene_tree_uncertainty_expand (chain->treespace[i], chain->ctrl->branch_uncertainty_samples,
+                                  chain->ctrl->branch_uncertainty_tau, chain->ctrl->seed,
+                                  chain->ctrl->gene_id[i]);
     /* TODO: reduce number of trees on topology_space by neglecting root position  <-- available in genefam_dist */
     /* create discrete_sample struct from tree frequencies, in order to sample new tree in O(1) time */
     chain->treefreq[i]  = new_discrete_sample_from_frequencies (chain->treespace[i]->freq, chain->treespace[i]->ndistinct);

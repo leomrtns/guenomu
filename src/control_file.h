@@ -48,6 +48,8 @@ struct control_file_struct {
   double lambda_prior[Ndist]; /* hyper^3 prior for dups, losses, ils */
   double weight_prior;        /* prior for the Dirichlet's concentration parameters (prior shared amongst genes, concent param not) */
   int n_species_trees;        /* one preserves the published sampler */
+  int branch_uncertainty_samples; /* zero disables optional singleton-tree expansion */
+  double branch_uncertainty_tau; /* raw branch-length units; zero is the identity kernel */
   double species_rf_max, species_weight_alpha; /* experimental pairwise RF bound and family-weight prior */
 
   int n_iter, n_samples, n_burnin, n_output, n_cycles_mtm, n_cycles_heat, n_mc_samples;

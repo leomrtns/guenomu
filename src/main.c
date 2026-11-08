@@ -11,6 +11,16 @@ void main_analyze_output (control_file ctrl);
 void main_sample_prior  (control_file ctrl);
 void mcmc_simulated_annealing (mcmc_chain chain);
 
+#ifdef BIOMCMC_MPI
+static void
+mpi_abort_on_library_error (void)
+{
+  int finalized;
+  MPI_Finalized (&finalized);
+  if (!finalized) MPI_Abort (MPI_COMM_WORLD, EXIT_FAILURE);
+}
+#endif
+
 int
 main (int argc, char **argv)
 {
@@ -19,6 +29,7 @@ main (int argc, char **argv)
 
 #ifdef BIOMCMC_MPI
   MPI_Init (&argc, &argv);
+  biomcmc_error_handler = mpi_abort_on_library_error; /* rank-local input errors must stop peers too */
 #endif
   ctrl  = new_control_file_from_argv (argc, argv);
   time0 = clock ();

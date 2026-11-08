@@ -86,70 +86,67 @@ init_tree_recon_from_species_names (topology gene, char_vector sptaxlabel)
   initialize_reconciliation_sp_count (gene->rec, sptaxlabel->nstrings, gene->nleaves);
 }
 
+static int
+compare_species_names_ignoring_case (const void *a, const void *b)
+{
+  return strcasecmp (*(const char *const *) a, *(const char *const *) b);
+}
+
+static void
+validate_species_mapping_names (char_vector species, char_vector gene)
+{
+  int i;
+  const char **names;
+  if (!species || !gene || !species->nstrings || !gene->nstrings)
+    biomcmc_error ("species mapping needs nonempty species and gene labels");
+  names = (const char**) biomcmc_malloc (species->nstrings * sizeof (char*));
+  for (i = 0; i < species->nstrings; i++) {
+    if (!species->string[i] || !species->string[i][0]) biomcmc_error ("empty species label in gene mapping");
+    names[i] = species->string[i];
+  }
+  qsort (names, species->nstrings, sizeof (char*), compare_species_names_ignoring_case);
+  for (i = 1; i < species->nstrings; i++) if (!strcasecmp (names[i-1], names[i]))
+    biomcmc_error ("species labels must be distinct ignoring case: \"%s\" and \"%s\"", names[i-1], names[i]);
+  free (names);
+}
+
+static int
+species_index_for_gene (char_vector species, const char *gene)
+{
+  int i, best = -1, tied = -1;
+  size_t length, longest = 0;
+  if (!gene || !gene[0]) biomcmc_error ("empty gene label in species mapping");
+  for (i = 0; i < species->nstrings; i++) {
+    /* nchars describes allocated capacity, not necessarily string length. */
+    length = strlen (species->string[i]);
+    if ((length >= longest) && strcasestr (gene, species->string[i])) {
+      if ((best >= 0) && (length == longest)) tied = i;
+      else { best = i; longest = length; tied = -1; }
+    }
+  }
+  if (tied >= 0)
+    biomcmc_error ("ambiguous species mapping for gene \"%s\": \"%s\" and \"%s\" have equally long matches", gene, species->string[best], species->string[tied]);
+  if (best < 0) biomcmc_error ("gene label \"%s\" does not contain a species name", gene);
+  return best;
+}
+
 void
 index_sptaxa_to_genetaxa (char_vector species, char_vector gene, int *sp_idx_in_gene, empfreq ef_external)
-{ /* We could have used gene->rec (reconciliation) instead of gene->rec->sp_id (int*) as input parameter, but in 
-     some cases we don't care about the gene tree (e.g. MaxTree algorithm, where we build the species tree directly 
-     from the gene distances) */
-  int i, j, n_index = gene->nstrings, *index;
-  empfreq ef;
-
-  /* Search first largest species names (so that for example "ecoli" will match only if "ecoliII" doesn't) */
-  if (ef_external) ef = ef_external; /* empfreq initialized outside (by calling function, e.g) */
-  else ef = new_empfreq_sort_decreasing (species->nchars, species->nstrings, 1); /* local ("1" means size_t) */
-
-  index = (int*) biomcmc_malloc (n_index * sizeof (int));
-  for (i=0; i < n_index; i++) { 
-    sp_idx_in_gene[i] = -1; /* initialize mapping */ 
-    index[i] = i;  /* scan gene leaves _without_ replacement */
-  }
-
-  for (i=0; i < species->nstrings; i++) for (j=0; j < n_index; j++) /* search sp name in all unmapped gene names */
-    if ((gene->nchars[index[j]] >= species->nchars[ ef->i[i].idx ]) && /* ordered species names (by nchars[]) */
-        (strcasestr (gene->string[index[j]], species->string[ ef->i[i].idx ]))) { 
-      /* found species name within gene name; we have a mapping */
-      sp_idx_in_gene[ index[j] ] = ef->i[i].idx;
-      index[j] = index[--n_index]; // with this the whole search takes O(N ln N),
-      j--; // index[j] is now a distinct element (the last)
-    }
-
-  if (n_index) {
-    fprintf (stderr, "Couldn't find species for genes:\n");
-    for (i=0; i < n_index; i++) fprintf (stderr, " \"%s\"\n", gene->string[index[i]]);
-    biomcmc_error ("gene names should contain the name of species");
-  }
-
-  if (!ef_external) del_empfreq (ef); 
-  if (index) free (index);
+{
+  int i;
+  /* Keep the external-order argument for existing callers, but choose matches
+   * by actual label length so correctness does not depend on allocated capacity. */
+  (void) ef_external;
+  validate_species_mapping_names (species, gene);
+  if (!sp_idx_in_gene) biomcmc_error ("missing output vector for species mapping");
+  for (i = 0; i < gene->nstrings; i++) sp_idx_in_gene[i] = species_index_for_gene (species, gene->string[i]);
 }
 
 void
 index_sptaxa_to_reconciliation (char_vector species, char_vector gene, reconciliation rec)
-{/* largest species names already sorted (so that for example "ecoli" will match only after "ecoliII" didn't) */
-  int i, j, n_index = gene->nstrings, *index;
-
-  index = (int*) biomcmc_malloc (n_index * sizeof (int));
-  for (i=0; i < n_index; i++) { 
-    rec->sp_id[i] = -1; /* initialize mapping */ 
-    index[i] = i;  /* scan gene leaves _without_ replacement */
-  }
-
-  for (i=0; i < species->nstrings; i++) for (j=0; j < n_index; j++) /* search sp name in all unmapped gene names */
-    if ((gene->nchars[index[j]] >= species->nchars[i]) && /* ordered species names (by nchars[]) */
-        (strcasestr (gene->string[index[j]], species->string[i]))) { 
-      /* found species name within gene name; we have a mapping */
-      rec->sp_id[ index[j] ] = i;
-      index[j] = index[--n_index]; // with this the whole search takes O(N ln N),
-      j--; // index[j] is now a distinct element (the last)
-    }
-
-  if (n_index) {
-    fprintf (stderr, "Couldn't find species for genes:\n");
-    for (i=0; i < n_index; i++) fprintf (stderr, " \"%s\"\n", gene->string[index[i]]);
-    biomcmc_error ("gene names should contain the name of ordered species");
-  }
-  if (index) free (index);
-
+{
+  if (!rec || !rec->sp_id) biomcmc_error ("missing reconciliation for species mapping");
+  index_sptaxa_to_genetaxa (species, gene, rec->sp_id, NULL);
   initialize_reconciliation_sp_count (rec, species->nstrings, gene->nstrings);
 }
 

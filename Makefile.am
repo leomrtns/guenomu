@@ -6,8 +6,8 @@ pkgconfig_DATA = biomcmc_guenomu.pc
 
 AM_CPPFLAGS = -I$(srcdir)/lib -I$(top_builddir)/lib -I$(srcdir)/src @DEF_MPI@ $(ARGTABLE2_CFLAGS)
 AM_CFLAGS = @AM_CFLAGS@ @OPENMP_CFLAGS@
-check_PROGRAMS = tests/test_lowlevel tests/test_multiple_species tests/test_multiple_species_topology
-TESTS = tests/test_lowlevel tests/check-output.py tests/test_multiple_species_topology tests/check-multiple-species.py
+check_PROGRAMS = tests/test_tree_inputs tests/test_lowlevel tests/test_multiple_species tests/test_multiple_species_topology tests/test_mapping tests/test_mixture_weights tests/test_gene_tree_uncertainty
+TESTS = tests/check-tree-inputs.py tests/test_lowlevel tests/check-output.py tests/test_multiple_species_topology tests/check-multiple-species.py tests/test_mapping tests/test_mixture_weights tests/test_gene_tree_uncertainty tests/check-branch-uncertainty.py
 TEST_EXTENSIONS = .py
 PY_LOG_COMPILER = $(SHELL) $(srcdir)/tests/run-python.sh $(PYTHON)
 tests_test_lowlevel_SOURCES = tests/test_lowlevel.c
@@ -19,10 +19,27 @@ AM_TESTS_ENVIRONMENT = GUENOMU_SERIAL='$(abs_top_builddir)/src/guenomu'; export 
 endif
 EXTRA_DIST += tests/check-output.py tests/run-python.sh
 
-multiple_test_sources = src/control_file.c src/mcmc_chain_common.c src/checkpoint_file.c
+multiple_test_sources = src/control_file.c src/mcmc_chain_common.c src/checkpoint_file.c src/gene_tree_uncertainty.c
 tests_test_multiple_species_SOURCES = tests/test_multiple_species.c src/multiple_species.c $(multiple_test_sources)
 tests_test_multiple_species_LDADD = lib/libbiomcmc_guenomu.la $(ARGTABLE2_LIBS)
 tests_test_multiple_species_topology_SOURCES = tests/test_multiple_species_topology.c $(multiple_test_sources)
 tests_test_multiple_species_topology_LDADD = lib/libbiomcmc_guenomu.la $(ARGTABLE2_LIBS)
 AM_TESTS_ENVIRONMENT += GUENOMU_MULTIPLE_TEST='$(abs_top_builddir)/tests/test_multiple_species'; export GUENOMU_MULTIPLE_TEST;
 EXTRA_DIST += tests/check-multiple-species.py
+
+tests_test_mapping_SOURCES = tests/test_mapping.c
+tests_test_mapping_LDADD = lib/libbiomcmc_guenomu.la
+tests_test_mixture_weights_SOURCES = tests/test_mixture_weights.c src/multiple_species.c $(multiple_test_sources)
+tests_test_mixture_weights_LDADD = lib/libbiomcmc_guenomu.la $(ARGTABLE2_LIBS)
+tests_test_gene_tree_uncertainty_SOURCES = tests/test_gene_tree_uncertainty.c
+tests_test_gene_tree_uncertainty_LDADD = lib/libbiomcmc_guenomu.la
+EXTRA_DIST += tests/check-branch-uncertainty.py
+
+tests_test_tree_inputs_SOURCES = tests/test_tree_inputs.c
+tests_test_tree_inputs_LDADD = lib/libbiomcmc_guenomu.la
+AM_TESTS_ENVIRONMENT += GUENOMU_TREE_INPUT_TEST='$(abs_top_builddir)/tests/test_tree_inputs'; export GUENOMU_TREE_INPUT_TEST;
+EXTRA_DIST += tests/check-tree-inputs.py
+# Keep test objects separate from the application objects built in src/.
+tests_test_multiple_species_CPPFLAGS = $(AM_CPPFLAGS)
+tests_test_multiple_species_topology_CPPFLAGS = $(AM_CPPFLAGS)
+tests_test_mixture_weights_CPPFLAGS = $(AM_CPPFLAGS)

@@ -111,6 +111,8 @@ FILE *biomcmc_fopen (const char *path, const char *mode);
  * \param[in] template va_list following same format as printf()
  * \result exits program */
 void biomcmc_error (const char *template, ...);
+/* Optional application fatal-error handler; the default NULL retains exit(). */
+extern void (*biomcmc_error_handler) (void);
 
 /*! \brief Comparison between two integers used by qsort() in crescent order */
 int compare_int_increasing (const void *a, const void *b);

@@ -90,12 +90,20 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = tests/test_lowlevel$(EXEEXT) \
+check_PROGRAMS = tests/test_tree_inputs$(EXEEXT) \
+	tests/test_lowlevel$(EXEEXT) \
 	tests/test_multiple_species$(EXEEXT) \
-	tests/test_multiple_species_topology$(EXEEXT)
-TESTS = tests/test_lowlevel$(EXEEXT) tests/check-output.py \
 	tests/test_multiple_species_topology$(EXEEXT) \
-	tests/check-multiple-species.py
+	tests/test_mapping$(EXEEXT) \
+	tests/test_mixture_weights$(EXEEXT) \
+	tests/test_gene_tree_uncertainty$(EXEEXT)
+TESTS = tests/check-tree-inputs.py tests/test_lowlevel$(EXEEXT) \
+	tests/check-output.py \
+	tests/test_multiple_species_topology$(EXEEXT) \
+	tests/check-multiple-species.py tests/test_mapping$(EXEEXT) \
+	tests/test_mixture_weights$(EXEEXT) \
+	tests/test_gene_tree_uncertainty$(EXEEXT) \
+	tests/check-branch-uncertainty.py
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -113,30 +121,61 @@ CONFIG_HEADER = $(top_builddir)/lib/config.h
 CONFIG_CLEAN_FILES = biomcmc_guenomu.pc
 CONFIG_CLEAN_VPATH_FILES =
 am__dirstamp = $(am__leading_dot)dirstamp
-am_tests_test_lowlevel_OBJECTS = tests/test_lowlevel.$(OBJEXT)
-tests_test_lowlevel_OBJECTS = $(am_tests_test_lowlevel_OBJECTS)
-tests_test_lowlevel_DEPENDENCIES = lib/libbiomcmc_guenomu.la
+am_tests_test_gene_tree_uncertainty_OBJECTS =  \
+	tests/test_gene_tree_uncertainty.$(OBJEXT)
+tests_test_gene_tree_uncertainty_OBJECTS =  \
+	$(am_tests_test_gene_tree_uncertainty_OBJECTS)
+tests_test_gene_tree_uncertainty_DEPENDENCIES =  \
+	lib/libbiomcmc_guenomu.la
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-am__objects_1 = src/control_file.$(OBJEXT) \
-	src/mcmc_chain_common.$(OBJEXT) src/checkpoint_file.$(OBJEXT)
+am_tests_test_lowlevel_OBJECTS = tests/test_lowlevel.$(OBJEXT)
+tests_test_lowlevel_OBJECTS = $(am_tests_test_lowlevel_OBJECTS)
+tests_test_lowlevel_DEPENDENCIES = lib/libbiomcmc_guenomu.la
+am_tests_test_mapping_OBJECTS = tests/test_mapping.$(OBJEXT)
+tests_test_mapping_OBJECTS = $(am_tests_test_mapping_OBJECTS)
+tests_test_mapping_DEPENDENCIES = lib/libbiomcmc_guenomu.la
+am__objects_1 = src/tests_test_mixture_weights-control_file.$(OBJEXT) \
+	src/tests_test_mixture_weights-mcmc_chain_common.$(OBJEXT) \
+	src/tests_test_mixture_weights-checkpoint_file.$(OBJEXT) \
+	src/tests_test_mixture_weights-gene_tree_uncertainty.$(OBJEXT)
+am_tests_test_mixture_weights_OBJECTS =  \
+	tests/test_mixture_weights-test_mixture_weights.$(OBJEXT) \
+	src/tests_test_mixture_weights-multiple_species.$(OBJEXT) \
+	$(am__objects_1)
+tests_test_mixture_weights_OBJECTS =  \
+	$(am_tests_test_mixture_weights_OBJECTS)
+am__DEPENDENCIES_1 =
+tests_test_mixture_weights_DEPENDENCIES = lib/libbiomcmc_guenomu.la \
+	$(am__DEPENDENCIES_1)
+am__objects_2 =  \
+	src/tests_test_multiple_species-control_file.$(OBJEXT) \
+	src/tests_test_multiple_species-mcmc_chain_common.$(OBJEXT) \
+	src/tests_test_multiple_species-checkpoint_file.$(OBJEXT) \
+	src/tests_test_multiple_species-gene_tree_uncertainty.$(OBJEXT)
 am_tests_test_multiple_species_OBJECTS =  \
-	tests/test_multiple_species.$(OBJEXT) \
-	src/multiple_species.$(OBJEXT) $(am__objects_1)
+	tests/test_multiple_species-test_multiple_species.$(OBJEXT) \
+	src/tests_test_multiple_species-multiple_species.$(OBJEXT) \
+	$(am__objects_2)
 tests_test_multiple_species_OBJECTS =  \
 	$(am_tests_test_multiple_species_OBJECTS)
-am__DEPENDENCIES_1 =
 tests_test_multiple_species_DEPENDENCIES = lib/libbiomcmc_guenomu.la \
 	$(am__DEPENDENCIES_1)
-am_tests_test_multiple_species_topology_OBJECTS =  \
-	tests/test_multiple_species_topology.$(OBJEXT) \
-	$(am__objects_1)
+am__objects_3 = src/tests_test_multiple_species_topology-control_file.$(OBJEXT) \
+	src/tests_test_multiple_species_topology-mcmc_chain_common.$(OBJEXT) \
+	src/tests_test_multiple_species_topology-checkpoint_file.$(OBJEXT) \
+	src/tests_test_multiple_species_topology-gene_tree_uncertainty.$(OBJEXT)
+am_tests_test_multiple_species_topology_OBJECTS = tests/test_multiple_species_topology-test_multiple_species_topology.$(OBJEXT) \
+	$(am__objects_3)
 tests_test_multiple_species_topology_OBJECTS =  \
 	$(am_tests_test_multiple_species_topology_OBJECTS)
 tests_test_multiple_species_topology_DEPENDENCIES =  \
 	lib/libbiomcmc_guenomu.la $(am__DEPENDENCIES_1)
+am_tests_test_tree_inputs_OBJECTS = tests/test_tree_inputs.$(OBJEXT)
+tests_test_tree_inputs_OBJECTS = $(am_tests_test_tree_inputs_OBJECTS)
+tests_test_tree_inputs_DEPENDENCIES = lib/libbiomcmc_guenomu.la
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -152,13 +191,28 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/lib
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = src/$(DEPDIR)/checkpoint_file.Po \
-	src/$(DEPDIR)/control_file.Po \
-	src/$(DEPDIR)/mcmc_chain_common.Po \
-	src/$(DEPDIR)/multiple_species.Po \
+am__depfiles_remade =  \
+	src/$(DEPDIR)/tests_test_mixture_weights-checkpoint_file.Po \
+	src/$(DEPDIR)/tests_test_mixture_weights-control_file.Po \
+	src/$(DEPDIR)/tests_test_mixture_weights-gene_tree_uncertainty.Po \
+	src/$(DEPDIR)/tests_test_mixture_weights-mcmc_chain_common.Po \
+	src/$(DEPDIR)/tests_test_mixture_weights-multiple_species.Po \
+	src/$(DEPDIR)/tests_test_multiple_species-checkpoint_file.Po \
+	src/$(DEPDIR)/tests_test_multiple_species-control_file.Po \
+	src/$(DEPDIR)/tests_test_multiple_species-gene_tree_uncertainty.Po \
+	src/$(DEPDIR)/tests_test_multiple_species-mcmc_chain_common.Po \
+	src/$(DEPDIR)/tests_test_multiple_species-multiple_species.Po \
+	src/$(DEPDIR)/tests_test_multiple_species_topology-checkpoint_file.Po \
+	src/$(DEPDIR)/tests_test_multiple_species_topology-control_file.Po \
+	src/$(DEPDIR)/tests_test_multiple_species_topology-gene_tree_uncertainty.Po \
+	src/$(DEPDIR)/tests_test_multiple_species_topology-mcmc_chain_common.Po \
+	tests/$(DEPDIR)/test_gene_tree_uncertainty.Po \
 	tests/$(DEPDIR)/test_lowlevel.Po \
-	tests/$(DEPDIR)/test_multiple_species.Po \
-	tests/$(DEPDIR)/test_multiple_species_topology.Po
+	tests/$(DEPDIR)/test_mapping.Po \
+	tests/$(DEPDIR)/test_mixture_weights-test_mixture_weights.Po \
+	tests/$(DEPDIR)/test_multiple_species-test_multiple_species.Po \
+	tests/$(DEPDIR)/test_multiple_species_topology-test_multiple_species_topology.Po \
+	tests/$(DEPDIR)/test_tree_inputs.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -178,12 +232,18 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(tests_test_lowlevel_SOURCES) \
+SOURCES = $(tests_test_gene_tree_uncertainty_SOURCES) \
+	$(tests_test_lowlevel_SOURCES) $(tests_test_mapping_SOURCES) \
+	$(tests_test_mixture_weights_SOURCES) \
 	$(tests_test_multiple_species_SOURCES) \
-	$(tests_test_multiple_species_topology_SOURCES)
-DIST_SOURCES = $(tests_test_lowlevel_SOURCES) \
+	$(tests_test_multiple_species_topology_SOURCES) \
+	$(tests_test_tree_inputs_SOURCES)
+DIST_SOURCES = $(tests_test_gene_tree_uncertainty_SOURCES) \
+	$(tests_test_lowlevel_SOURCES) $(tests_test_mapping_SOURCES) \
+	$(tests_test_mixture_weights_SOURCES) \
 	$(tests_test_multiple_species_SOURCES) \
-	$(tests_test_multiple_species_topology_SOURCES)
+	$(tests_test_multiple_species_topology_SOURCES) \
+	$(tests_test_tree_inputs_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -628,7 +688,8 @@ ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = lib src
 EXTRA_DIST = README.md docs examples bootstrap biomcmc_guenomu.pc.in \
 	tests/check-output.py tests/run-python.sh \
-	tests/check-multiple-species.py
+	tests/check-multiple-species.py \
+	tests/check-branch-uncertainty.py tests/check-tree-inputs.py
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = biomcmc_guenomu.pc
 AM_CPPFLAGS = -I$(srcdir)/lib -I$(top_builddir)/lib -I$(srcdir)/src @DEF_MPI@ $(ARGTABLE2_CFLAGS)
@@ -639,17 +700,33 @@ tests_test_lowlevel_LDADD = lib/libbiomcmc_guenomu.la
 @USE_MPI_FALSE@AM_TESTS_ENVIRONMENT = GUENOMU_SERIAL='$(abs_top_builddir)/src/guenomu'; \
 @USE_MPI_FALSE@	export GUENOMU_SERIAL; \
 @USE_MPI_FALSE@	GUENOMU_MULTIPLE_TEST='$(abs_top_builddir)/tests/test_multiple_species'; \
-@USE_MPI_FALSE@	export GUENOMU_MULTIPLE_TEST;
+@USE_MPI_FALSE@	export GUENOMU_MULTIPLE_TEST; \
+@USE_MPI_FALSE@	GUENOMU_TREE_INPUT_TEST='$(abs_top_builddir)/tests/test_tree_inputs'; \
+@USE_MPI_FALSE@	export GUENOMU_TREE_INPUT_TEST;
 @USE_MPI_TRUE@AM_TESTS_ENVIRONMENT =  \
 @USE_MPI_TRUE@	GUENOMU_MPI='$(abs_top_builddir)/src/guenomu'; \
 @USE_MPI_TRUE@	export GUENOMU_MPI; \
 @USE_MPI_TRUE@	GUENOMU_MULTIPLE_TEST='$(abs_top_builddir)/tests/test_multiple_species'; \
-@USE_MPI_TRUE@	export GUENOMU_MULTIPLE_TEST;
-multiple_test_sources = src/control_file.c src/mcmc_chain_common.c src/checkpoint_file.c
+@USE_MPI_TRUE@	export GUENOMU_MULTIPLE_TEST; \
+@USE_MPI_TRUE@	GUENOMU_TREE_INPUT_TEST='$(abs_top_builddir)/tests/test_tree_inputs'; \
+@USE_MPI_TRUE@	export GUENOMU_TREE_INPUT_TEST;
+multiple_test_sources = src/control_file.c src/mcmc_chain_common.c src/checkpoint_file.c src/gene_tree_uncertainty.c
 tests_test_multiple_species_SOURCES = tests/test_multiple_species.c src/multiple_species.c $(multiple_test_sources)
 tests_test_multiple_species_LDADD = lib/libbiomcmc_guenomu.la $(ARGTABLE2_LIBS)
 tests_test_multiple_species_topology_SOURCES = tests/test_multiple_species_topology.c $(multiple_test_sources)
 tests_test_multiple_species_topology_LDADD = lib/libbiomcmc_guenomu.la $(ARGTABLE2_LIBS)
+tests_test_mapping_SOURCES = tests/test_mapping.c
+tests_test_mapping_LDADD = lib/libbiomcmc_guenomu.la
+tests_test_mixture_weights_SOURCES = tests/test_mixture_weights.c src/multiple_species.c $(multiple_test_sources)
+tests_test_mixture_weights_LDADD = lib/libbiomcmc_guenomu.la $(ARGTABLE2_LIBS)
+tests_test_gene_tree_uncertainty_SOURCES = tests/test_gene_tree_uncertainty.c
+tests_test_gene_tree_uncertainty_LDADD = lib/libbiomcmc_guenomu.la
+tests_test_tree_inputs_SOURCES = tests/test_tree_inputs.c
+tests_test_tree_inputs_LDADD = lib/libbiomcmc_guenomu.la
+# Keep test objects separate from the application objects built in src/.
+tests_test_multiple_species_CPPFLAGS = $(AM_CPPFLAGS)
+tests_test_multiple_species_topology_CPPFLAGS = $(AM_CPPFLAGS)
+tests_test_mixture_weights_CPPFLAGS = $(AM_CPPFLAGS)
 all: all-recursive
 
 .SUFFIXES:
@@ -699,38 +776,82 @@ tests/$(am__dirstamp):
 tests/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) tests/$(DEPDIR)
 	@: >>tests/$(DEPDIR)/$(am__dirstamp)
+tests/test_gene_tree_uncertainty.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+
+tests/test_gene_tree_uncertainty$(EXEEXT): $(tests_test_gene_tree_uncertainty_OBJECTS) $(tests_test_gene_tree_uncertainty_DEPENDENCIES) $(EXTRA_tests_test_gene_tree_uncertainty_DEPENDENCIES) tests/$(am__dirstamp)
+	@rm -f tests/test_gene_tree_uncertainty$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(tests_test_gene_tree_uncertainty_OBJECTS) $(tests_test_gene_tree_uncertainty_LDADD) $(LIBS)
 tests/test_lowlevel.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 
 tests/test_lowlevel$(EXEEXT): $(tests_test_lowlevel_OBJECTS) $(tests_test_lowlevel_DEPENDENCIES) $(EXTRA_tests_test_lowlevel_DEPENDENCIES) tests/$(am__dirstamp)
 	@rm -f tests/test_lowlevel$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(tests_test_lowlevel_OBJECTS) $(tests_test_lowlevel_LDADD) $(LIBS)
-tests/test_multiple_species.$(OBJEXT): tests/$(am__dirstamp) \
+tests/test_mapping.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
+
+tests/test_mapping$(EXEEXT): $(tests_test_mapping_OBJECTS) $(tests_test_mapping_DEPENDENCIES) $(EXTRA_tests_test_mapping_DEPENDENCIES) tests/$(am__dirstamp)
+	@rm -f tests/test_mapping$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(tests_test_mapping_OBJECTS) $(tests_test_mapping_LDADD) $(LIBS)
+tests/test_mixture_weights-test_mixture_weights.$(OBJEXT):  \
+	tests/$(am__dirstamp) tests/$(DEPDIR)/$(am__dirstamp)
 src/$(am__dirstamp):
 	@$(MKDIR_P) src
 	@: >>src/$(am__dirstamp)
 src/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) src/$(DEPDIR)
 	@: >>src/$(DEPDIR)/$(am__dirstamp)
-src/multiple_species.$(OBJEXT): src/$(am__dirstamp) \
-	src/$(DEPDIR)/$(am__dirstamp)
-src/control_file.$(OBJEXT): src/$(am__dirstamp) \
-	src/$(DEPDIR)/$(am__dirstamp)
-src/mcmc_chain_common.$(OBJEXT): src/$(am__dirstamp) \
-	src/$(DEPDIR)/$(am__dirstamp)
-src/checkpoint_file.$(OBJEXT): src/$(am__dirstamp) \
-	src/$(DEPDIR)/$(am__dirstamp)
+src/tests_test_mixture_weights-multiple_species.$(OBJEXT):  \
+	src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
+src/tests_test_mixture_weights-control_file.$(OBJEXT):  \
+	src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
+src/tests_test_mixture_weights-mcmc_chain_common.$(OBJEXT):  \
+	src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
+src/tests_test_mixture_weights-checkpoint_file.$(OBJEXT):  \
+	src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
+src/tests_test_mixture_weights-gene_tree_uncertainty.$(OBJEXT):  \
+	src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
+
+tests/test_mixture_weights$(EXEEXT): $(tests_test_mixture_weights_OBJECTS) $(tests_test_mixture_weights_DEPENDENCIES) $(EXTRA_tests_test_mixture_weights_DEPENDENCIES) tests/$(am__dirstamp)
+	@rm -f tests/test_mixture_weights$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(tests_test_mixture_weights_OBJECTS) $(tests_test_mixture_weights_LDADD) $(LIBS)
+tests/test_multiple_species-test_multiple_species.$(OBJEXT):  \
+	tests/$(am__dirstamp) tests/$(DEPDIR)/$(am__dirstamp)
+src/tests_test_multiple_species-multiple_species.$(OBJEXT):  \
+	src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
+src/tests_test_multiple_species-control_file.$(OBJEXT):  \
+	src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
+src/tests_test_multiple_species-mcmc_chain_common.$(OBJEXT):  \
+	src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
+src/tests_test_multiple_species-checkpoint_file.$(OBJEXT):  \
+	src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
+src/tests_test_multiple_species-gene_tree_uncertainty.$(OBJEXT):  \
+	src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
 
 tests/test_multiple_species$(EXEEXT): $(tests_test_multiple_species_OBJECTS) $(tests_test_multiple_species_DEPENDENCIES) $(EXTRA_tests_test_multiple_species_DEPENDENCIES) tests/$(am__dirstamp)
 	@rm -f tests/test_multiple_species$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(tests_test_multiple_species_OBJECTS) $(tests_test_multiple_species_LDADD) $(LIBS)
-tests/test_multiple_species_topology.$(OBJEXT): tests/$(am__dirstamp) \
-	tests/$(DEPDIR)/$(am__dirstamp)
+tests/test_multiple_species_topology-test_multiple_species_topology.$(OBJEXT):  \
+	tests/$(am__dirstamp) tests/$(DEPDIR)/$(am__dirstamp)
+src/tests_test_multiple_species_topology-control_file.$(OBJEXT):  \
+	src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
+src/tests_test_multiple_species_topology-mcmc_chain_common.$(OBJEXT):  \
+	src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
+src/tests_test_multiple_species_topology-checkpoint_file.$(OBJEXT):  \
+	src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
+src/tests_test_multiple_species_topology-gene_tree_uncertainty.$(OBJEXT):  \
+	src/$(am__dirstamp) src/$(DEPDIR)/$(am__dirstamp)
 
 tests/test_multiple_species_topology$(EXEEXT): $(tests_test_multiple_species_topology_OBJECTS) $(tests_test_multiple_species_topology_DEPENDENCIES) $(EXTRA_tests_test_multiple_species_topology_DEPENDENCIES) tests/$(am__dirstamp)
 	@rm -f tests/test_multiple_species_topology$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(tests_test_multiple_species_topology_OBJECTS) $(tests_test_multiple_species_topology_LDADD) $(LIBS)
+tests/test_tree_inputs.$(OBJEXT): tests/$(am__dirstamp) \
+	tests/$(DEPDIR)/$(am__dirstamp)
+
+tests/test_tree_inputs$(EXEEXT): $(tests_test_tree_inputs_OBJECTS) $(tests_test_tree_inputs_DEPENDENCIES) $(EXTRA_tests_test_tree_inputs_DEPENDENCIES) tests/$(am__dirstamp)
+	@rm -f tests/test_tree_inputs$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(tests_test_tree_inputs_OBJECTS) $(tests_test_tree_inputs_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -740,13 +861,27 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/checkpoint_file.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/control_file.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/mcmc_chain_common.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/multiple_species.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tests_test_mixture_weights-checkpoint_file.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tests_test_mixture_weights-control_file.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tests_test_mixture_weights-gene_tree_uncertainty.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tests_test_mixture_weights-mcmc_chain_common.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tests_test_mixture_weights-multiple_species.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tests_test_multiple_species-checkpoint_file.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tests_test_multiple_species-control_file.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tests_test_multiple_species-gene_tree_uncertainty.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tests_test_multiple_species-mcmc_chain_common.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tests_test_multiple_species-multiple_species.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tests_test_multiple_species_topology-checkpoint_file.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tests_test_multiple_species_topology-control_file.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tests_test_multiple_species_topology-gene_tree_uncertainty.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tests_test_multiple_species_topology-mcmc_chain_common.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_gene_tree_uncertainty.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_lowlevel.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_multiple_species.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_multiple_species_topology.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_mapping.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_mixture_weights-test_mixture_weights.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_multiple_species-test_multiple_species.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_multiple_species_topology-test_multiple_species_topology.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@tests/$(DEPDIR)/test_tree_inputs.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -777,6 +912,244 @@ am--depfiles: $(am__depfiles_remade)
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
+
+tests/test_mixture_weights-test_mixture_weights.o: tests/test_mixture_weights.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_mixture_weights_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests/test_mixture_weights-test_mixture_weights.o -MD -MP -MF tests/$(DEPDIR)/test_mixture_weights-test_mixture_weights.Tpo -c -o tests/test_mixture_weights-test_mixture_weights.o `test -f 'tests/test_mixture_weights.c' || echo '$(srcdir)/'`tests/test_mixture_weights.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_mixture_weights-test_mixture_weights.Tpo tests/$(DEPDIR)/test_mixture_weights-test_mixture_weights.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tests/test_mixture_weights.c' object='tests/test_mixture_weights-test_mixture_weights.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_mixture_weights_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests/test_mixture_weights-test_mixture_weights.o `test -f 'tests/test_mixture_weights.c' || echo '$(srcdir)/'`tests/test_mixture_weights.c
+
+tests/test_mixture_weights-test_mixture_weights.obj: tests/test_mixture_weights.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_mixture_weights_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests/test_mixture_weights-test_mixture_weights.obj -MD -MP -MF tests/$(DEPDIR)/test_mixture_weights-test_mixture_weights.Tpo -c -o tests/test_mixture_weights-test_mixture_weights.obj `if test -f 'tests/test_mixture_weights.c'; then $(CYGPATH_W) 'tests/test_mixture_weights.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_mixture_weights.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_mixture_weights-test_mixture_weights.Tpo tests/$(DEPDIR)/test_mixture_weights-test_mixture_weights.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tests/test_mixture_weights.c' object='tests/test_mixture_weights-test_mixture_weights.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_mixture_weights_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests/test_mixture_weights-test_mixture_weights.obj `if test -f 'tests/test_mixture_weights.c'; then $(CYGPATH_W) 'tests/test_mixture_weights.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_mixture_weights.c'; fi`
+
+src/tests_test_mixture_weights-multiple_species.o: src/multiple_species.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_mixture_weights_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_mixture_weights-multiple_species.o -MD -MP -MF src/$(DEPDIR)/tests_test_mixture_weights-multiple_species.Tpo -c -o src/tests_test_mixture_weights-multiple_species.o `test -f 'src/multiple_species.c' || echo '$(srcdir)/'`src/multiple_species.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_mixture_weights-multiple_species.Tpo src/$(DEPDIR)/tests_test_mixture_weights-multiple_species.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/multiple_species.c' object='src/tests_test_mixture_weights-multiple_species.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_mixture_weights_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_mixture_weights-multiple_species.o `test -f 'src/multiple_species.c' || echo '$(srcdir)/'`src/multiple_species.c
+
+src/tests_test_mixture_weights-multiple_species.obj: src/multiple_species.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_mixture_weights_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_mixture_weights-multiple_species.obj -MD -MP -MF src/$(DEPDIR)/tests_test_mixture_weights-multiple_species.Tpo -c -o src/tests_test_mixture_weights-multiple_species.obj `if test -f 'src/multiple_species.c'; then $(CYGPATH_W) 'src/multiple_species.c'; else $(CYGPATH_W) '$(srcdir)/src/multiple_species.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_mixture_weights-multiple_species.Tpo src/$(DEPDIR)/tests_test_mixture_weights-multiple_species.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/multiple_species.c' object='src/tests_test_mixture_weights-multiple_species.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_mixture_weights_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_mixture_weights-multiple_species.obj `if test -f 'src/multiple_species.c'; then $(CYGPATH_W) 'src/multiple_species.c'; else $(CYGPATH_W) '$(srcdir)/src/multiple_species.c'; fi`
+
+src/tests_test_mixture_weights-control_file.o: src/control_file.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_mixture_weights_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_mixture_weights-control_file.o -MD -MP -MF src/$(DEPDIR)/tests_test_mixture_weights-control_file.Tpo -c -o src/tests_test_mixture_weights-control_file.o `test -f 'src/control_file.c' || echo '$(srcdir)/'`src/control_file.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_mixture_weights-control_file.Tpo src/$(DEPDIR)/tests_test_mixture_weights-control_file.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/control_file.c' object='src/tests_test_mixture_weights-control_file.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_mixture_weights_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_mixture_weights-control_file.o `test -f 'src/control_file.c' || echo '$(srcdir)/'`src/control_file.c
+
+src/tests_test_mixture_weights-control_file.obj: src/control_file.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_mixture_weights_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_mixture_weights-control_file.obj -MD -MP -MF src/$(DEPDIR)/tests_test_mixture_weights-control_file.Tpo -c -o src/tests_test_mixture_weights-control_file.obj `if test -f 'src/control_file.c'; then $(CYGPATH_W) 'src/control_file.c'; else $(CYGPATH_W) '$(srcdir)/src/control_file.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_mixture_weights-control_file.Tpo src/$(DEPDIR)/tests_test_mixture_weights-control_file.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/control_file.c' object='src/tests_test_mixture_weights-control_file.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_mixture_weights_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_mixture_weights-control_file.obj `if test -f 'src/control_file.c'; then $(CYGPATH_W) 'src/control_file.c'; else $(CYGPATH_W) '$(srcdir)/src/control_file.c'; fi`
+
+src/tests_test_mixture_weights-mcmc_chain_common.o: src/mcmc_chain_common.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_mixture_weights_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_mixture_weights-mcmc_chain_common.o -MD -MP -MF src/$(DEPDIR)/tests_test_mixture_weights-mcmc_chain_common.Tpo -c -o src/tests_test_mixture_weights-mcmc_chain_common.o `test -f 'src/mcmc_chain_common.c' || echo '$(srcdir)/'`src/mcmc_chain_common.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_mixture_weights-mcmc_chain_common.Tpo src/$(DEPDIR)/tests_test_mixture_weights-mcmc_chain_common.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/mcmc_chain_common.c' object='src/tests_test_mixture_weights-mcmc_chain_common.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_mixture_weights_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_mixture_weights-mcmc_chain_common.o `test -f 'src/mcmc_chain_common.c' || echo '$(srcdir)/'`src/mcmc_chain_common.c
+
+src/tests_test_mixture_weights-mcmc_chain_common.obj: src/mcmc_chain_common.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_mixture_weights_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_mixture_weights-mcmc_chain_common.obj -MD -MP -MF src/$(DEPDIR)/tests_test_mixture_weights-mcmc_chain_common.Tpo -c -o src/tests_test_mixture_weights-mcmc_chain_common.obj `if test -f 'src/mcmc_chain_common.c'; then $(CYGPATH_W) 'src/mcmc_chain_common.c'; else $(CYGPATH_W) '$(srcdir)/src/mcmc_chain_common.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_mixture_weights-mcmc_chain_common.Tpo src/$(DEPDIR)/tests_test_mixture_weights-mcmc_chain_common.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/mcmc_chain_common.c' object='src/tests_test_mixture_weights-mcmc_chain_common.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_mixture_weights_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_mixture_weights-mcmc_chain_common.obj `if test -f 'src/mcmc_chain_common.c'; then $(CYGPATH_W) 'src/mcmc_chain_common.c'; else $(CYGPATH_W) '$(srcdir)/src/mcmc_chain_common.c'; fi`
+
+src/tests_test_mixture_weights-checkpoint_file.o: src/checkpoint_file.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_mixture_weights_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_mixture_weights-checkpoint_file.o -MD -MP -MF src/$(DEPDIR)/tests_test_mixture_weights-checkpoint_file.Tpo -c -o src/tests_test_mixture_weights-checkpoint_file.o `test -f 'src/checkpoint_file.c' || echo '$(srcdir)/'`src/checkpoint_file.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_mixture_weights-checkpoint_file.Tpo src/$(DEPDIR)/tests_test_mixture_weights-checkpoint_file.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/checkpoint_file.c' object='src/tests_test_mixture_weights-checkpoint_file.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_mixture_weights_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_mixture_weights-checkpoint_file.o `test -f 'src/checkpoint_file.c' || echo '$(srcdir)/'`src/checkpoint_file.c
+
+src/tests_test_mixture_weights-checkpoint_file.obj: src/checkpoint_file.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_mixture_weights_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_mixture_weights-checkpoint_file.obj -MD -MP -MF src/$(DEPDIR)/tests_test_mixture_weights-checkpoint_file.Tpo -c -o src/tests_test_mixture_weights-checkpoint_file.obj `if test -f 'src/checkpoint_file.c'; then $(CYGPATH_W) 'src/checkpoint_file.c'; else $(CYGPATH_W) '$(srcdir)/src/checkpoint_file.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_mixture_weights-checkpoint_file.Tpo src/$(DEPDIR)/tests_test_mixture_weights-checkpoint_file.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/checkpoint_file.c' object='src/tests_test_mixture_weights-checkpoint_file.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_mixture_weights_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_mixture_weights-checkpoint_file.obj `if test -f 'src/checkpoint_file.c'; then $(CYGPATH_W) 'src/checkpoint_file.c'; else $(CYGPATH_W) '$(srcdir)/src/checkpoint_file.c'; fi`
+
+src/tests_test_mixture_weights-gene_tree_uncertainty.o: src/gene_tree_uncertainty.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_mixture_weights_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_mixture_weights-gene_tree_uncertainty.o -MD -MP -MF src/$(DEPDIR)/tests_test_mixture_weights-gene_tree_uncertainty.Tpo -c -o src/tests_test_mixture_weights-gene_tree_uncertainty.o `test -f 'src/gene_tree_uncertainty.c' || echo '$(srcdir)/'`src/gene_tree_uncertainty.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_mixture_weights-gene_tree_uncertainty.Tpo src/$(DEPDIR)/tests_test_mixture_weights-gene_tree_uncertainty.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/gene_tree_uncertainty.c' object='src/tests_test_mixture_weights-gene_tree_uncertainty.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_mixture_weights_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_mixture_weights-gene_tree_uncertainty.o `test -f 'src/gene_tree_uncertainty.c' || echo '$(srcdir)/'`src/gene_tree_uncertainty.c
+
+src/tests_test_mixture_weights-gene_tree_uncertainty.obj: src/gene_tree_uncertainty.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_mixture_weights_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_mixture_weights-gene_tree_uncertainty.obj -MD -MP -MF src/$(DEPDIR)/tests_test_mixture_weights-gene_tree_uncertainty.Tpo -c -o src/tests_test_mixture_weights-gene_tree_uncertainty.obj `if test -f 'src/gene_tree_uncertainty.c'; then $(CYGPATH_W) 'src/gene_tree_uncertainty.c'; else $(CYGPATH_W) '$(srcdir)/src/gene_tree_uncertainty.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_mixture_weights-gene_tree_uncertainty.Tpo src/$(DEPDIR)/tests_test_mixture_weights-gene_tree_uncertainty.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/gene_tree_uncertainty.c' object='src/tests_test_mixture_weights-gene_tree_uncertainty.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_mixture_weights_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_mixture_weights-gene_tree_uncertainty.obj `if test -f 'src/gene_tree_uncertainty.c'; then $(CYGPATH_W) 'src/gene_tree_uncertainty.c'; else $(CYGPATH_W) '$(srcdir)/src/gene_tree_uncertainty.c'; fi`
+
+tests/test_multiple_species-test_multiple_species.o: tests/test_multiple_species.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests/test_multiple_species-test_multiple_species.o -MD -MP -MF tests/$(DEPDIR)/test_multiple_species-test_multiple_species.Tpo -c -o tests/test_multiple_species-test_multiple_species.o `test -f 'tests/test_multiple_species.c' || echo '$(srcdir)/'`tests/test_multiple_species.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_multiple_species-test_multiple_species.Tpo tests/$(DEPDIR)/test_multiple_species-test_multiple_species.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tests/test_multiple_species.c' object='tests/test_multiple_species-test_multiple_species.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests/test_multiple_species-test_multiple_species.o `test -f 'tests/test_multiple_species.c' || echo '$(srcdir)/'`tests/test_multiple_species.c
+
+tests/test_multiple_species-test_multiple_species.obj: tests/test_multiple_species.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests/test_multiple_species-test_multiple_species.obj -MD -MP -MF tests/$(DEPDIR)/test_multiple_species-test_multiple_species.Tpo -c -o tests/test_multiple_species-test_multiple_species.obj `if test -f 'tests/test_multiple_species.c'; then $(CYGPATH_W) 'tests/test_multiple_species.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_multiple_species.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_multiple_species-test_multiple_species.Tpo tests/$(DEPDIR)/test_multiple_species-test_multiple_species.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tests/test_multiple_species.c' object='tests/test_multiple_species-test_multiple_species.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests/test_multiple_species-test_multiple_species.obj `if test -f 'tests/test_multiple_species.c'; then $(CYGPATH_W) 'tests/test_multiple_species.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_multiple_species.c'; fi`
+
+src/tests_test_multiple_species-multiple_species.o: src/multiple_species.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_multiple_species-multiple_species.o -MD -MP -MF src/$(DEPDIR)/tests_test_multiple_species-multiple_species.Tpo -c -o src/tests_test_multiple_species-multiple_species.o `test -f 'src/multiple_species.c' || echo '$(srcdir)/'`src/multiple_species.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_multiple_species-multiple_species.Tpo src/$(DEPDIR)/tests_test_multiple_species-multiple_species.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/multiple_species.c' object='src/tests_test_multiple_species-multiple_species.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_multiple_species-multiple_species.o `test -f 'src/multiple_species.c' || echo '$(srcdir)/'`src/multiple_species.c
+
+src/tests_test_multiple_species-multiple_species.obj: src/multiple_species.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_multiple_species-multiple_species.obj -MD -MP -MF src/$(DEPDIR)/tests_test_multiple_species-multiple_species.Tpo -c -o src/tests_test_multiple_species-multiple_species.obj `if test -f 'src/multiple_species.c'; then $(CYGPATH_W) 'src/multiple_species.c'; else $(CYGPATH_W) '$(srcdir)/src/multiple_species.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_multiple_species-multiple_species.Tpo src/$(DEPDIR)/tests_test_multiple_species-multiple_species.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/multiple_species.c' object='src/tests_test_multiple_species-multiple_species.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_multiple_species-multiple_species.obj `if test -f 'src/multiple_species.c'; then $(CYGPATH_W) 'src/multiple_species.c'; else $(CYGPATH_W) '$(srcdir)/src/multiple_species.c'; fi`
+
+src/tests_test_multiple_species-control_file.o: src/control_file.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_multiple_species-control_file.o -MD -MP -MF src/$(DEPDIR)/tests_test_multiple_species-control_file.Tpo -c -o src/tests_test_multiple_species-control_file.o `test -f 'src/control_file.c' || echo '$(srcdir)/'`src/control_file.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_multiple_species-control_file.Tpo src/$(DEPDIR)/tests_test_multiple_species-control_file.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/control_file.c' object='src/tests_test_multiple_species-control_file.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_multiple_species-control_file.o `test -f 'src/control_file.c' || echo '$(srcdir)/'`src/control_file.c
+
+src/tests_test_multiple_species-control_file.obj: src/control_file.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_multiple_species-control_file.obj -MD -MP -MF src/$(DEPDIR)/tests_test_multiple_species-control_file.Tpo -c -o src/tests_test_multiple_species-control_file.obj `if test -f 'src/control_file.c'; then $(CYGPATH_W) 'src/control_file.c'; else $(CYGPATH_W) '$(srcdir)/src/control_file.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_multiple_species-control_file.Tpo src/$(DEPDIR)/tests_test_multiple_species-control_file.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/control_file.c' object='src/tests_test_multiple_species-control_file.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_multiple_species-control_file.obj `if test -f 'src/control_file.c'; then $(CYGPATH_W) 'src/control_file.c'; else $(CYGPATH_W) '$(srcdir)/src/control_file.c'; fi`
+
+src/tests_test_multiple_species-mcmc_chain_common.o: src/mcmc_chain_common.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_multiple_species-mcmc_chain_common.o -MD -MP -MF src/$(DEPDIR)/tests_test_multiple_species-mcmc_chain_common.Tpo -c -o src/tests_test_multiple_species-mcmc_chain_common.o `test -f 'src/mcmc_chain_common.c' || echo '$(srcdir)/'`src/mcmc_chain_common.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_multiple_species-mcmc_chain_common.Tpo src/$(DEPDIR)/tests_test_multiple_species-mcmc_chain_common.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/mcmc_chain_common.c' object='src/tests_test_multiple_species-mcmc_chain_common.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_multiple_species-mcmc_chain_common.o `test -f 'src/mcmc_chain_common.c' || echo '$(srcdir)/'`src/mcmc_chain_common.c
+
+src/tests_test_multiple_species-mcmc_chain_common.obj: src/mcmc_chain_common.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_multiple_species-mcmc_chain_common.obj -MD -MP -MF src/$(DEPDIR)/tests_test_multiple_species-mcmc_chain_common.Tpo -c -o src/tests_test_multiple_species-mcmc_chain_common.obj `if test -f 'src/mcmc_chain_common.c'; then $(CYGPATH_W) 'src/mcmc_chain_common.c'; else $(CYGPATH_W) '$(srcdir)/src/mcmc_chain_common.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_multiple_species-mcmc_chain_common.Tpo src/$(DEPDIR)/tests_test_multiple_species-mcmc_chain_common.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/mcmc_chain_common.c' object='src/tests_test_multiple_species-mcmc_chain_common.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_multiple_species-mcmc_chain_common.obj `if test -f 'src/mcmc_chain_common.c'; then $(CYGPATH_W) 'src/mcmc_chain_common.c'; else $(CYGPATH_W) '$(srcdir)/src/mcmc_chain_common.c'; fi`
+
+src/tests_test_multiple_species-checkpoint_file.o: src/checkpoint_file.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_multiple_species-checkpoint_file.o -MD -MP -MF src/$(DEPDIR)/tests_test_multiple_species-checkpoint_file.Tpo -c -o src/tests_test_multiple_species-checkpoint_file.o `test -f 'src/checkpoint_file.c' || echo '$(srcdir)/'`src/checkpoint_file.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_multiple_species-checkpoint_file.Tpo src/$(DEPDIR)/tests_test_multiple_species-checkpoint_file.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/checkpoint_file.c' object='src/tests_test_multiple_species-checkpoint_file.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_multiple_species-checkpoint_file.o `test -f 'src/checkpoint_file.c' || echo '$(srcdir)/'`src/checkpoint_file.c
+
+src/tests_test_multiple_species-checkpoint_file.obj: src/checkpoint_file.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_multiple_species-checkpoint_file.obj -MD -MP -MF src/$(DEPDIR)/tests_test_multiple_species-checkpoint_file.Tpo -c -o src/tests_test_multiple_species-checkpoint_file.obj `if test -f 'src/checkpoint_file.c'; then $(CYGPATH_W) 'src/checkpoint_file.c'; else $(CYGPATH_W) '$(srcdir)/src/checkpoint_file.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_multiple_species-checkpoint_file.Tpo src/$(DEPDIR)/tests_test_multiple_species-checkpoint_file.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/checkpoint_file.c' object='src/tests_test_multiple_species-checkpoint_file.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_multiple_species-checkpoint_file.obj `if test -f 'src/checkpoint_file.c'; then $(CYGPATH_W) 'src/checkpoint_file.c'; else $(CYGPATH_W) '$(srcdir)/src/checkpoint_file.c'; fi`
+
+src/tests_test_multiple_species-gene_tree_uncertainty.o: src/gene_tree_uncertainty.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_multiple_species-gene_tree_uncertainty.o -MD -MP -MF src/$(DEPDIR)/tests_test_multiple_species-gene_tree_uncertainty.Tpo -c -o src/tests_test_multiple_species-gene_tree_uncertainty.o `test -f 'src/gene_tree_uncertainty.c' || echo '$(srcdir)/'`src/gene_tree_uncertainty.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_multiple_species-gene_tree_uncertainty.Tpo src/$(DEPDIR)/tests_test_multiple_species-gene_tree_uncertainty.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/gene_tree_uncertainty.c' object='src/tests_test_multiple_species-gene_tree_uncertainty.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_multiple_species-gene_tree_uncertainty.o `test -f 'src/gene_tree_uncertainty.c' || echo '$(srcdir)/'`src/gene_tree_uncertainty.c
+
+src/tests_test_multiple_species-gene_tree_uncertainty.obj: src/gene_tree_uncertainty.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_multiple_species-gene_tree_uncertainty.obj -MD -MP -MF src/$(DEPDIR)/tests_test_multiple_species-gene_tree_uncertainty.Tpo -c -o src/tests_test_multiple_species-gene_tree_uncertainty.obj `if test -f 'src/gene_tree_uncertainty.c'; then $(CYGPATH_W) 'src/gene_tree_uncertainty.c'; else $(CYGPATH_W) '$(srcdir)/src/gene_tree_uncertainty.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_multiple_species-gene_tree_uncertainty.Tpo src/$(DEPDIR)/tests_test_multiple_species-gene_tree_uncertainty.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/gene_tree_uncertainty.c' object='src/tests_test_multiple_species-gene_tree_uncertainty.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_multiple_species-gene_tree_uncertainty.obj `if test -f 'src/gene_tree_uncertainty.c'; then $(CYGPATH_W) 'src/gene_tree_uncertainty.c'; else $(CYGPATH_W) '$(srcdir)/src/gene_tree_uncertainty.c'; fi`
+
+tests/test_multiple_species_topology-test_multiple_species_topology.o: tests/test_multiple_species_topology.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_topology_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests/test_multiple_species_topology-test_multiple_species_topology.o -MD -MP -MF tests/$(DEPDIR)/test_multiple_species_topology-test_multiple_species_topology.Tpo -c -o tests/test_multiple_species_topology-test_multiple_species_topology.o `test -f 'tests/test_multiple_species_topology.c' || echo '$(srcdir)/'`tests/test_multiple_species_topology.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_multiple_species_topology-test_multiple_species_topology.Tpo tests/$(DEPDIR)/test_multiple_species_topology-test_multiple_species_topology.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tests/test_multiple_species_topology.c' object='tests/test_multiple_species_topology-test_multiple_species_topology.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_topology_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests/test_multiple_species_topology-test_multiple_species_topology.o `test -f 'tests/test_multiple_species_topology.c' || echo '$(srcdir)/'`tests/test_multiple_species_topology.c
+
+tests/test_multiple_species_topology-test_multiple_species_topology.obj: tests/test_multiple_species_topology.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_topology_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests/test_multiple_species_topology-test_multiple_species_topology.obj -MD -MP -MF tests/$(DEPDIR)/test_multiple_species_topology-test_multiple_species_topology.Tpo -c -o tests/test_multiple_species_topology-test_multiple_species_topology.obj `if test -f 'tests/test_multiple_species_topology.c'; then $(CYGPATH_W) 'tests/test_multiple_species_topology.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_multiple_species_topology.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test_multiple_species_topology-test_multiple_species_topology.Tpo tests/$(DEPDIR)/test_multiple_species_topology-test_multiple_species_topology.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tests/test_multiple_species_topology.c' object='tests/test_multiple_species_topology-test_multiple_species_topology.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_topology_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests/test_multiple_species_topology-test_multiple_species_topology.obj `if test -f 'tests/test_multiple_species_topology.c'; then $(CYGPATH_W) 'tests/test_multiple_species_topology.c'; else $(CYGPATH_W) '$(srcdir)/tests/test_multiple_species_topology.c'; fi`
+
+src/tests_test_multiple_species_topology-control_file.o: src/control_file.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_topology_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_multiple_species_topology-control_file.o -MD -MP -MF src/$(DEPDIR)/tests_test_multiple_species_topology-control_file.Tpo -c -o src/tests_test_multiple_species_topology-control_file.o `test -f 'src/control_file.c' || echo '$(srcdir)/'`src/control_file.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_multiple_species_topology-control_file.Tpo src/$(DEPDIR)/tests_test_multiple_species_topology-control_file.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/control_file.c' object='src/tests_test_multiple_species_topology-control_file.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_topology_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_multiple_species_topology-control_file.o `test -f 'src/control_file.c' || echo '$(srcdir)/'`src/control_file.c
+
+src/tests_test_multiple_species_topology-control_file.obj: src/control_file.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_topology_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_multiple_species_topology-control_file.obj -MD -MP -MF src/$(DEPDIR)/tests_test_multiple_species_topology-control_file.Tpo -c -o src/tests_test_multiple_species_topology-control_file.obj `if test -f 'src/control_file.c'; then $(CYGPATH_W) 'src/control_file.c'; else $(CYGPATH_W) '$(srcdir)/src/control_file.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_multiple_species_topology-control_file.Tpo src/$(DEPDIR)/tests_test_multiple_species_topology-control_file.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/control_file.c' object='src/tests_test_multiple_species_topology-control_file.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_topology_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_multiple_species_topology-control_file.obj `if test -f 'src/control_file.c'; then $(CYGPATH_W) 'src/control_file.c'; else $(CYGPATH_W) '$(srcdir)/src/control_file.c'; fi`
+
+src/tests_test_multiple_species_topology-mcmc_chain_common.o: src/mcmc_chain_common.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_topology_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_multiple_species_topology-mcmc_chain_common.o -MD -MP -MF src/$(DEPDIR)/tests_test_multiple_species_topology-mcmc_chain_common.Tpo -c -o src/tests_test_multiple_species_topology-mcmc_chain_common.o `test -f 'src/mcmc_chain_common.c' || echo '$(srcdir)/'`src/mcmc_chain_common.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_multiple_species_topology-mcmc_chain_common.Tpo src/$(DEPDIR)/tests_test_multiple_species_topology-mcmc_chain_common.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/mcmc_chain_common.c' object='src/tests_test_multiple_species_topology-mcmc_chain_common.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_topology_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_multiple_species_topology-mcmc_chain_common.o `test -f 'src/mcmc_chain_common.c' || echo '$(srcdir)/'`src/mcmc_chain_common.c
+
+src/tests_test_multiple_species_topology-mcmc_chain_common.obj: src/mcmc_chain_common.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_topology_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_multiple_species_topology-mcmc_chain_common.obj -MD -MP -MF src/$(DEPDIR)/tests_test_multiple_species_topology-mcmc_chain_common.Tpo -c -o src/tests_test_multiple_species_topology-mcmc_chain_common.obj `if test -f 'src/mcmc_chain_common.c'; then $(CYGPATH_W) 'src/mcmc_chain_common.c'; else $(CYGPATH_W) '$(srcdir)/src/mcmc_chain_common.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_multiple_species_topology-mcmc_chain_common.Tpo src/$(DEPDIR)/tests_test_multiple_species_topology-mcmc_chain_common.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/mcmc_chain_common.c' object='src/tests_test_multiple_species_topology-mcmc_chain_common.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_topology_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_multiple_species_topology-mcmc_chain_common.obj `if test -f 'src/mcmc_chain_common.c'; then $(CYGPATH_W) 'src/mcmc_chain_common.c'; else $(CYGPATH_W) '$(srcdir)/src/mcmc_chain_common.c'; fi`
+
+src/tests_test_multiple_species_topology-checkpoint_file.o: src/checkpoint_file.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_topology_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_multiple_species_topology-checkpoint_file.o -MD -MP -MF src/$(DEPDIR)/tests_test_multiple_species_topology-checkpoint_file.Tpo -c -o src/tests_test_multiple_species_topology-checkpoint_file.o `test -f 'src/checkpoint_file.c' || echo '$(srcdir)/'`src/checkpoint_file.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_multiple_species_topology-checkpoint_file.Tpo src/$(DEPDIR)/tests_test_multiple_species_topology-checkpoint_file.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/checkpoint_file.c' object='src/tests_test_multiple_species_topology-checkpoint_file.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_topology_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_multiple_species_topology-checkpoint_file.o `test -f 'src/checkpoint_file.c' || echo '$(srcdir)/'`src/checkpoint_file.c
+
+src/tests_test_multiple_species_topology-checkpoint_file.obj: src/checkpoint_file.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_topology_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_multiple_species_topology-checkpoint_file.obj -MD -MP -MF src/$(DEPDIR)/tests_test_multiple_species_topology-checkpoint_file.Tpo -c -o src/tests_test_multiple_species_topology-checkpoint_file.obj `if test -f 'src/checkpoint_file.c'; then $(CYGPATH_W) 'src/checkpoint_file.c'; else $(CYGPATH_W) '$(srcdir)/src/checkpoint_file.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_multiple_species_topology-checkpoint_file.Tpo src/$(DEPDIR)/tests_test_multiple_species_topology-checkpoint_file.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/checkpoint_file.c' object='src/tests_test_multiple_species_topology-checkpoint_file.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_topology_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_multiple_species_topology-checkpoint_file.obj `if test -f 'src/checkpoint_file.c'; then $(CYGPATH_W) 'src/checkpoint_file.c'; else $(CYGPATH_W) '$(srcdir)/src/checkpoint_file.c'; fi`
+
+src/tests_test_multiple_species_topology-gene_tree_uncertainty.o: src/gene_tree_uncertainty.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_topology_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_multiple_species_topology-gene_tree_uncertainty.o -MD -MP -MF src/$(DEPDIR)/tests_test_multiple_species_topology-gene_tree_uncertainty.Tpo -c -o src/tests_test_multiple_species_topology-gene_tree_uncertainty.o `test -f 'src/gene_tree_uncertainty.c' || echo '$(srcdir)/'`src/gene_tree_uncertainty.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_multiple_species_topology-gene_tree_uncertainty.Tpo src/$(DEPDIR)/tests_test_multiple_species_topology-gene_tree_uncertainty.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/gene_tree_uncertainty.c' object='src/tests_test_multiple_species_topology-gene_tree_uncertainty.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_topology_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_multiple_species_topology-gene_tree_uncertainty.o `test -f 'src/gene_tree_uncertainty.c' || echo '$(srcdir)/'`src/gene_tree_uncertainty.c
+
+src/tests_test_multiple_species_topology-gene_tree_uncertainty.obj: src/gene_tree_uncertainty.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_topology_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT src/tests_test_multiple_species_topology-gene_tree_uncertainty.obj -MD -MP -MF src/$(DEPDIR)/tests_test_multiple_species_topology-gene_tree_uncertainty.Tpo -c -o src/tests_test_multiple_species_topology-gene_tree_uncertainty.obj `if test -f 'src/gene_tree_uncertainty.c'; then $(CYGPATH_W) 'src/gene_tree_uncertainty.c'; else $(CYGPATH_W) '$(srcdir)/src/gene_tree_uncertainty.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests_test_multiple_species_topology-gene_tree_uncertainty.Tpo src/$(DEPDIR)/tests_test_multiple_species_topology-gene_tree_uncertainty.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/gene_tree_uncertainty.c' object='src/tests_test_multiple_species_topology-gene_tree_uncertainty.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_test_multiple_species_topology_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o src/tests_test_multiple_species_topology-gene_tree_uncertainty.obj `if test -f 'src/gene_tree_uncertainty.c'; then $(CYGPATH_W) 'src/gene_tree_uncertainty.c'; else $(CYGPATH_W) '$(srcdir)/src/gene_tree_uncertainty.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -1095,6 +1468,27 @@ tests/test_multiple_species_topology.log: tests/test_multiple_species_topology$(
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+tests/test_mapping.log: tests/test_mapping$(EXEEXT)
+	@p='tests/test_mapping$(EXEEXT)'; \
+	b='tests/test_mapping'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+tests/test_mixture_weights.log: tests/test_mixture_weights$(EXEEXT)
+	@p='tests/test_mixture_weights$(EXEEXT)'; \
+	b='tests/test_mixture_weights'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+tests/test_gene_tree_uncertainty.log: tests/test_gene_tree_uncertainty$(EXEEXT)
+	@p='tests/test_gene_tree_uncertainty$(EXEEXT)'; \
+	b='tests/test_gene_tree_uncertainty'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 .py.log:
 	@p='$<'; \
 	$(am__set_b); \
@@ -1360,13 +1754,27 @@ clean-am: clean-checkPROGRAMS clean-generic clean-libtool \
 
 distclean: distclean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
-	-rm -f src/$(DEPDIR)/checkpoint_file.Po
-	-rm -f src/$(DEPDIR)/control_file.Po
-	-rm -f src/$(DEPDIR)/mcmc_chain_common.Po
-	-rm -f src/$(DEPDIR)/multiple_species.Po
+	-rm -f src/$(DEPDIR)/tests_test_mixture_weights-checkpoint_file.Po
+	-rm -f src/$(DEPDIR)/tests_test_mixture_weights-control_file.Po
+	-rm -f src/$(DEPDIR)/tests_test_mixture_weights-gene_tree_uncertainty.Po
+	-rm -f src/$(DEPDIR)/tests_test_mixture_weights-mcmc_chain_common.Po
+	-rm -f src/$(DEPDIR)/tests_test_mixture_weights-multiple_species.Po
+	-rm -f src/$(DEPDIR)/tests_test_multiple_species-checkpoint_file.Po
+	-rm -f src/$(DEPDIR)/tests_test_multiple_species-control_file.Po
+	-rm -f src/$(DEPDIR)/tests_test_multiple_species-gene_tree_uncertainty.Po
+	-rm -f src/$(DEPDIR)/tests_test_multiple_species-mcmc_chain_common.Po
+	-rm -f src/$(DEPDIR)/tests_test_multiple_species-multiple_species.Po
+	-rm -f src/$(DEPDIR)/tests_test_multiple_species_topology-checkpoint_file.Po
+	-rm -f src/$(DEPDIR)/tests_test_multiple_species_topology-control_file.Po
+	-rm -f src/$(DEPDIR)/tests_test_multiple_species_topology-gene_tree_uncertainty.Po
+	-rm -f src/$(DEPDIR)/tests_test_multiple_species_topology-mcmc_chain_common.Po
+	-rm -f tests/$(DEPDIR)/test_gene_tree_uncertainty.Po
 	-rm -f tests/$(DEPDIR)/test_lowlevel.Po
-	-rm -f tests/$(DEPDIR)/test_multiple_species.Po
-	-rm -f tests/$(DEPDIR)/test_multiple_species_topology.Po
+	-rm -f tests/$(DEPDIR)/test_mapping.Po
+	-rm -f tests/$(DEPDIR)/test_mixture_weights-test_mixture_weights.Po
+	-rm -f tests/$(DEPDIR)/test_multiple_species-test_multiple_species.Po
+	-rm -f tests/$(DEPDIR)/test_multiple_species_topology-test_multiple_species_topology.Po
+	-rm -f tests/$(DEPDIR)/test_tree_inputs.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-libtool distclean-tags
@@ -1414,13 +1822,27 @@ installcheck-am:
 maintainer-clean: maintainer-clean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -rf $(top_srcdir)/autom4te.cache
-	-rm -f src/$(DEPDIR)/checkpoint_file.Po
-	-rm -f src/$(DEPDIR)/control_file.Po
-	-rm -f src/$(DEPDIR)/mcmc_chain_common.Po
-	-rm -f src/$(DEPDIR)/multiple_species.Po
+	-rm -f src/$(DEPDIR)/tests_test_mixture_weights-checkpoint_file.Po
+	-rm -f src/$(DEPDIR)/tests_test_mixture_weights-control_file.Po
+	-rm -f src/$(DEPDIR)/tests_test_mixture_weights-gene_tree_uncertainty.Po
+	-rm -f src/$(DEPDIR)/tests_test_mixture_weights-mcmc_chain_common.Po
+	-rm -f src/$(DEPDIR)/tests_test_mixture_weights-multiple_species.Po
+	-rm -f src/$(DEPDIR)/tests_test_multiple_species-checkpoint_file.Po
+	-rm -f src/$(DEPDIR)/tests_test_multiple_species-control_file.Po
+	-rm -f src/$(DEPDIR)/tests_test_multiple_species-gene_tree_uncertainty.Po
+	-rm -f src/$(DEPDIR)/tests_test_multiple_species-mcmc_chain_common.Po
+	-rm -f src/$(DEPDIR)/tests_test_multiple_species-multiple_species.Po
+	-rm -f src/$(DEPDIR)/tests_test_multiple_species_topology-checkpoint_file.Po
+	-rm -f src/$(DEPDIR)/tests_test_multiple_species_topology-control_file.Po
+	-rm -f src/$(DEPDIR)/tests_test_multiple_species_topology-gene_tree_uncertainty.Po
+	-rm -f src/$(DEPDIR)/tests_test_multiple_species_topology-mcmc_chain_common.Po
+	-rm -f tests/$(DEPDIR)/test_gene_tree_uncertainty.Po
 	-rm -f tests/$(DEPDIR)/test_lowlevel.Po
-	-rm -f tests/$(DEPDIR)/test_multiple_species.Po
-	-rm -f tests/$(DEPDIR)/test_multiple_species_topology.Po
+	-rm -f tests/$(DEPDIR)/test_mapping.Po
+	-rm -f tests/$(DEPDIR)/test_mixture_weights-test_mixture_weights.Po
+	-rm -f tests/$(DEPDIR)/test_multiple_species-test_multiple_species.Po
+	-rm -f tests/$(DEPDIR)/test_multiple_species_topology-test_multiple_species_topology.Po
+	-rm -f tests/$(DEPDIR)/test_tree_inputs.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

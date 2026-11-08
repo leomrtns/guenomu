@@ -96,6 +96,11 @@ def exercise(binary, root, mpi=None):
         checkpoint.write_bytes(contents[:len(contents) * 4 // 5])
         output = run(prefix + ["-z", "1", "run.ctrl"], directory, success=False)
         assert "different numbers of complete samples" in output, output
+        invalid = root / "mpi-invalid-gene"
+        fixture(invalid)
+        tree = invalid / "g0.tre"
+        tree.write_text(tree.read_text().replace("A_0", "UNKNOWN"))
+        run(prefix + ["run.ctrl"], invalid, success=False)
         single = root / "mpi-single"
         fixture(single, 1)
         run([mpi, "-n", "1", binary, "run.ctrl"], single)

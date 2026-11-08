@@ -116,7 +116,7 @@ nonempty_string (char *string)
 {
   char *last = strchr (string, '\0'), *s;
 
-  if (*(last-1) == '\n') *(--last) = '\0'; // chomp final "\n"
+  if ((last > string) && (*(last-1) == '\n')) *(--last) = '\0'; // chomp final "\n"
 
   if (!(last-string)) return false;
   for (s = string; s < last; s++) if (!isspace (*s)) return true;

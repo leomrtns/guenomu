@@ -418,8 +418,9 @@ topology_to_string_by_id (const topology tree, double *blen)
 {
   char *str;
   /* allocate space for str (overestimate size) */
-  int size = tree->nnodes * 4 + tree->nleaves * 8;
-  if (blen) size += 16 * tree->nnodes;
+  size_t size = (size_t) tree->nnodes * 4 + (size_t) tree->nleaves * 8;
+  int i;
+  if (blen) for (i = 0; i < tree->nnodes; i++) size += snprintf (NULL, 0, ":%12.8lf", blen[i]);
 
   str = (char *) biomcmc_malloc (sizeof (char) * size);
   memset (str, 0, sizeof (char) * size);
@@ -448,13 +449,18 @@ char *
 topology_to_string_by_name (const topology tree, double *blen)
 {
   char *str;
-  int size = 1 + tree->nnodes * 4, i;
+  size_t size = 1 + (size_t) tree->nnodes * 4;
+  int i;
+  const char *label;
 
   if (!tree->taxlabel) return topology_to_string_by_id (tree, blen);
 
   /* allocate space for str (overestimate size) */
-  for (i=0; i < tree->nleaves; i++) size += strlen (tree->taxlabel->string[i]) + 1;
-  if (blen) size += 16 * tree->nnodes;
+  for (i=0; i < tree->nleaves; i++) {
+    size += strlen (tree->taxlabel->string[i]) + 3; /* possible surrounding quotes */
+    for (label = tree->taxlabel->string[i]; *label; label++) if (*label == '\'') size++;
+  }
+  if (blen) for (i = 0; i < tree->nnodes; i++) size += snprintf (NULL, 0, ":%12.8lf", blen[i]);
 
   str = (char *) biomcmc_malloc (sizeof (char) * size);
   memset (str, 0, sizeof (char) * size);
@@ -473,8 +479,19 @@ topology_subtree_to_string_by_name (char *str, const topol_node node, const char
     if (blen) sprintf (str + strlen (str), "):%12.8lf", blen[node->id]);
     else sprintf (str + strlen (str), ")");
   }
-  else if (blen) sprintf (str + strlen (str), "%s:%12.8lf", taxlabel[node->id], blen[node->id]);
-  else sprintf (str + strlen (str), "%s", taxlabel[node->id]);
+  else {
+    const char *label = taxlabel[node->id];
+    char *end = str + strlen (str);
+    bool quote = (strpbrk (label, " ()[],:;'\"\t\r\n") != NULL);
+    if (quote) *end++ = '\'';
+    for (; *label; label++) {
+      *end++ = *label;
+      if (*label == '\'') *end++ = '\''; /* Newick escapes quotes by doubling them */
+    }
+    if (quote) *end++ = '\'';
+    *end = '\0';
+    if (blen) sprintf (end, ":%12.8lf", blen[node->id]);
+  }
 }
 
 void

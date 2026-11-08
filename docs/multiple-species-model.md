@@ -130,6 +130,14 @@ $$
 
 Consequently, changing $\alpha$ changes conditional weight distributions but not the species-tree marginal target in this particular independent-weight specification. There is no shared population allocation proportion that pools weight information across families. A hierarchical $w_i\mid\pi,\eta$ model could add that pooling, but is a separate extension.
 
+For fixed histories, let $q_k=A_{ik}/\sum_\ell A_{i\ell}$. The family-weight conditional admits the exact representation
+
+$$
+p(w_i\mid S)=\sum_k q_k\,\operatorname{Dirichlet}(w_i;\alpha+e_k).
+$$
+
+The implementation selects k with probabilities $q_k$ and draws this Dirichlet distribution, yielding an independent conditional draw rather than a random walk. Its conditional mean is $(\alpha+q_k)/(K\alpha+1)$. This does not change the marginal-identifiability limitation above.
+
 Component labels are exchangeable. Swapping all history indices and corresponding weights leaves the target unchanged. Label-specific posterior means across runs can therefore be misleading. Prefer label-invariant split summaries, pairwise RF distributions and predictive family scores, or state and validate a post-processing relabelling rule. The sampler does not establish that component 1 has a fixed biological role.
 
 ## Computation and MPI
@@ -170,3 +178,7 @@ p(H)\prod_{k=1}^{K}p(S_k\mid H,\tau),
 $$
 
 optionally conditioned on pairwise distinctness. This can encode related histories through one extra layer and permit a learned dispersion parameter $\tau$. It requires normalized topology-transition distributions, additional proposals and a clear interpretation of $H$. It is not implemented, and it is not equivalent to the current pairwise RF truncation.
+
+## Branch-length-derived empirical evidence
+
+The optional [reference-centred contraction/refinement kernel](branch-length-uncertainty.md) defines an explicit input distribution around one length-bearing gene tree. Its empirical draws enter the same $q_{it}$ score as other tree collections. They are a sensitivity model, not automatically posterior trees from sequences. The [research review](research-review.md) separates this software extension from the outstanding normalization, pooling and calibration questions.

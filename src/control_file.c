@@ -199,6 +199,8 @@ new_control_file (void)
   for (k = 0; k < Ndist; k++) ctrl->lambda_prior[k] = 1e-5;
   ctrl->weight_prior = 0.;
   ctrl->n_species_trees = 1;
+  ctrl->branch_uncertainty_samples = 0;
+  ctrl->branch_uncertainty_tau = 0.;
   ctrl->species_rf_max = 0.8;
   ctrl->species_weight_alpha = 1.;
   ctrl->n_iter = ctrl->n_samples = ctrl->n_burnin = ctrl->n_output = 0;
@@ -275,6 +277,16 @@ control_file_read_parameter_value (control_file ctrl, char *parameter, char *val
     else if (strcasestr (value, "prio")) ctrl->action = ActionSamplePrior;
     else if (strcasestr (value, "impo")) ctrl->action = ActionImportanceSampling;
     else                                ctrl->action = ActionImportanceSampling;
+  }
+
+  else if (strcasestr (parameter, "branch_uncertainty_samples")) {
+    if ((n_read = sscanf (value, " %d ", &(ctrl->branch_uncertainty_samples))) != 1)
+      control_file_read_error (parameter, value, n_read, "one nonnegative integer");
+  }
+
+  else if (strcasestr (parameter, "branch_uncertainty_tau")) {
+    if ((n_read = sscanf (value, " %lf ", &(ctrl->branch_uncertainty_tau))) != 1)
+      control_file_read_error (parameter, value, n_read, "one nonnegative floating-point number");
   }
 
   else if (strcasestr (parameter, "n_species_trees")) {
@@ -400,7 +412,8 @@ control_file_read_parameter_value (control_file ctrl, char *parameter, char *val
   else if (strcasestr (parameter, "file_with_alignment_files")) {
     /* remove ending double-quote or semi-colon (leading was removed already) */
     size_t chars_size = strcspn (value, "\";");
-    while ( !isalnum (value[chars_size])) chars_size--; /* remove ending spaces */
+    while (chars_size && !isalnum (value[chars_size])) chars_size--; /* remove ending spaces */
+    if (!chars_size && !isalnum (value[0])) biomcmc_error ("empty filename for parameter %s", parameter);
     if (chars_size < strlen (value)) value[chars_size + 1] = '\0';
     ctrl->gene_filenames = new_char_vector_from_file (value);
   }
@@ -408,7 +421,8 @@ control_file_read_parameter_value (control_file ctrl, char *parameter, char *val
   else if (strcasestr (parameter, "file_with_tree_files")) {
     /* remove ending double-quote or semi-colon (leading was removed already) */
     size_t chars_size = strcspn (value, "\";");
-    while ( !isalnum (value[chars_size])) chars_size--; /* remove ending spaces */
+    while (chars_size && !isalnum (value[chars_size])) chars_size--; /* remove ending spaces */
+    if (!chars_size && !isalnum (value[0])) biomcmc_error ("empty filename for parameter %s", parameter);
     if (chars_size < strlen (value)) value[chars_size + 1] = '\0';
     ctrl->tree_filenames = new_char_vector_from_file (value);
   }
@@ -416,7 +430,8 @@ control_file_read_parameter_value (control_file ctrl, char *parameter, char *val
   else if (strcasestr (parameter, "file_with_species_names")) {
     /* remove ending double-quote or semi-colon (leading was removed already) */
     size_t chars_size = strcspn (value, "\";");
-    while ( !isalnum (value[chars_size])) chars_size--; /* remove ending spaces */
+    while (chars_size && !isalnum (value[chars_size])) chars_size--; /* remove ending spaces */
+    if (!chars_size && !isalnum (value[0])) biomcmc_error ("empty filename for parameter %s", parameter);
     if (chars_size < strlen (value)) value[chars_size + 1] = '\0';
     ctrl->species = new_char_vector_from_file (value);
   }
@@ -437,6 +452,7 @@ control_file_update_char_vector (char_vector *vec, char *string)
     else if (*start == '\'') end = strchr (++start, '\'');            /* end points to second single quotes */
     else                     end = start + strcspn (start, " \t;:,"); /* point to first space after start   */
 
+    if (!end) biomcmc_error ("unterminated quoted value in input list");
     *end = '\0';                             /* force current element to end here */
 
     if (end > start) char_vector_add_string (*vec, start);
@@ -449,6 +465,12 @@ set_default_mcmc_values (control_file ctrl)
 { /* some model parameters (priors, etc) must be checked only in mcmc_chain since they need access to data */
   bool have_magic = true;
   int i, zero = 0;
+  if ((ctrl->branch_uncertainty_samples < 0) || (ctrl->branch_uncertainty_samples > 100000))
+    biomcmc_error ("branch_uncertainty_samples must be between 0 and 100000");
+  if (!isfinite (ctrl->branch_uncertainty_tau) || (ctrl->branch_uncertainty_tau < 0.))
+    biomcmc_error ("branch_uncertainty_tau must be finite and nonnegative");
+  if (ctrl->branch_uncertainty_samples && (ctrl->n_species_trees == 1))
+    biomcmc_error ("branch uncertainty expansion is available only in experimental multiple-species-tree mode");
   if (ctrl->tree_filenames) char_vector_remove_duplicate_strings (ctrl->tree_filenames);
   else                      biomcmc_error ("Please give me a list of gene tree files for Importance Sampling");
   ctrl->original_ntrees = ctrl->tree_filenames->nstrings;
