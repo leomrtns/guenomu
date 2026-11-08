@@ -8,14 +8,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         mpi: [false, true]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential autoconf automake libtool pkg-config libargtable2-dev python3 mpich libmpich-dev
+      - name: Select MPICH launcher
+        if: matrix.mpi == true
+        run: |
+          mkdir -p "$RUNNER_TEMP/mpi-bin"
+          ln -s "$(command -v mpiexec.mpich)" "$RUNNER_TEMP/mpi-bin/mpiexec"
+          echo "$RUNNER_TEMP/mpi-bin" >> "$GITHUB_PATH"
       - name: Regenerate build files
         run: ./bootstrap
       - name: Configure
@@ -23,14 +30,28 @@ jobs:
           mkdir build
           cd build
           if [ '${{ matrix.mpi }}' = true ]; then
-            ../configure --enable-mpi MPICC=mpicc
+            ../configure --enable-mpi MPICC=mpicc.mpich
           else
             ../configure --disable-mpi
           fi
-      - name: Build and test
+      - name: Build
+        run: make -C build -j2
+      - name: Test
         run: |
-          make -C build -j2
-          make -C build check
+          make -C build check || {
+            test_status=$?
+            if test -f build/test-suite.log; then cat build/test-suite.log; fi
+            exit "$test_status"
+          }
       - name: Check source distribution
         if: matrix.mpi == false
         run: make -C build distcheck
+      - name: Retain failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-mpi-${{ matrix.mpi }}
+          path: |
+            build/**/*.log
+            build/**/*.trs
+          if-no-files-found: ignore

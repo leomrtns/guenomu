@@ -427,19 +427,20 @@ topology_to_string_by_id (const topology tree, double *blen)
   return str;
 }
 
+/* Append at the terminator; using the same buffer as a %s input is undefined. */
 void
 topology_subtree_to_string_by_id (char *str, const topol_node node, double *blen)
 {
   if (node->internal) { /* internal node */
-    sprintf (str, "%s(", str);
+    sprintf (str + strlen (str), "(");
     topology_subtree_to_string_by_id (str, node->left, blen);
-    sprintf (str, "%s,", str);
+    sprintf (str + strlen (str), ",");
     topology_subtree_to_string_by_id (str, node->right, blen);
-    if (blen) sprintf (str, "%s):%12.8lf", str, blen[node->id]);
-    else sprintf (str, "%s)", str);
+    if (blen) sprintf (str + strlen (str), "):%12.8lf", blen[node->id]);
+    else sprintf (str + strlen (str), ")");
   }
-  else if (blen) sprintf (str, "%s%d:%12.8lf", str, node->id+1, blen[node->id]);
-  else sprintf (str, "%s%d", str, node->id+1);
+  else if (blen) sprintf (str + strlen (str), "%d:%12.8lf", node->id+1, blen[node->id]);
+  else sprintf (str + strlen (str), "%d", node->id+1);
 }
 
 
@@ -465,15 +466,15 @@ void
 topology_subtree_to_string_by_name (char *str, const topol_node node, const char **taxlabel, double *blen)
 {
   if (node->internal) { /* internal node */
-    sprintf (str, "%s(", str);
+    sprintf (str + strlen (str), "(");
     topology_subtree_to_string_by_name (str, node->left, taxlabel, blen);
-    sprintf (str, "%s,", str);
+    sprintf (str + strlen (str), ",");
     topology_subtree_to_string_by_name (str, node->right, taxlabel, blen);
-    if (blen) sprintf (str, "%s):%12.8lf", str, blen[node->id]);
-    else sprintf (str, "%s)", str);
+    if (blen) sprintf (str + strlen (str), "):%12.8lf", blen[node->id]);
+    else sprintf (str + strlen (str), ")");
   }
-  else if (blen) sprintf (str, "%s%s:%12.8lf", str, taxlabel[node->id], blen[node->id]);
-  else sprintf (str, "%s%s", str, taxlabel[node->id]);
+  else if (blen) sprintf (str + strlen (str), "%s:%12.8lf", taxlabel[node->id], blen[node->id]);
+  else sprintf (str + strlen (str), "%s", taxlabel[node->id]);
 }
 
 void

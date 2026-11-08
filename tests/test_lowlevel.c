@@ -29,6 +29,38 @@ check_invalid_frequencies (double *prob)
          "reject invalid discrete probabilities");
 }
 
+static void
+check_tree_output (void)
+{
+  topology tree = new_topology (3);
+  double lengths[5] = {0.25, 0.25, 0.25, 0.25, 0.25};
+  char *text;
+  int named, i, colons;
+  tree->root = tree->nodelist[4];
+  tree->root->left = tree->nodelist[3];
+  tree->root->right = tree->nodelist[2];
+  tree->nodelist[3]->left = tree->nodelist[0];
+  tree->nodelist[3]->right = tree->nodelist[1];
+  text = topology_to_string_by_id (tree, NULL);
+  check (!strcmp (text, "((1,2),3)"), "serialize complete numeric Newick topology");
+  free (text);
+  tree->taxlabel = new_char_vector (3);
+  char_vector_add_string (tree->taxlabel, "Alpha");
+  char_vector_add_string (tree->taxlabel, "Beta");
+  char_vector_add_string (tree->taxlabel, "Gamma");
+  text = topology_to_string_by_name (tree, NULL);
+  check (!strcmp (text, "((Alpha,Beta),Gamma)"), "serialize complete named Newick topology");
+  free (text);
+  for (named = 0; named < 2; named++) {
+    text = named ? topology_to_string_by_name (tree, lengths) : topology_to_string_by_id (tree, lengths);
+    for (i = colons = 0; text[i]; i++) if (text[i] == ':') colons++;
+    check ((text[0] == '(') && (colons == 5) && strstr (text, "0.25000000"),
+           "serialize all tip and internal branch lengths");
+    free (text);
+  }
+  del_topology (tree);
+}
+
 int
 main (void)
 {
@@ -43,6 +75,8 @@ main (void)
   check (!nonempty_fasta_line (empty_line), "empty line does not read before its buffer");
   check (nonempty_fasta_line (one_letter) && !strcmp (one_letter, "A"), "accept one-character species or sequence");
   check (!nonempty_fasta_line (blank_line) && !nonempty_fasta_line (comment), "skip blank and comment lines");
+
+  check_tree_output ();
 
   qsort (values, 5, sizeof (int), compare_int_increasing);
   for (i = 1; i < 5; i++) check (values[i-1] < values[i], "sort full integer range increasing");
