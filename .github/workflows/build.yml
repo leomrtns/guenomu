@@ -21,7 +21,8 @@ jobs:
         if: matrix.mpi == true
         run: |
           mkdir -p "$RUNNER_TEMP/mpi-bin"
-          ln -s "$(command -v mpiexec.mpich)" "$RUNNER_TEMP/mpi-bin/mpiexec"
+          printf '%s\n' '#!/bin/sh' 'exec /usr/bin/mpiexec.mpich "$@"' > "$RUNNER_TEMP/mpi-bin/mpiexec"
+          chmod +x "$RUNNER_TEMP/mpi-bin/mpiexec"
           echo "$RUNNER_TEMP/mpi-bin" >> "$GITHUB_PATH"
       - name: Regenerate build files
         run: ./bootstrap
