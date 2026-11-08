@@ -1,22 +1,12 @@
-https://doi.org/10.1007/978-1-4939-6622-6_18
+# Species Tree Estimation from Genome-wide Data with Guenomu
 
-Species Tree Estimation from Genome-wide Data with Guenomu
+**Leonardo de Oliveira Martins and David Posada**
 
-Leonardo de Oliveira Martins^1,2^ --
-[[leomrtns@gmail.com]{.underline}](mailto:leomrtns@gmail.com)
+[Published chapter and figures](https://doi.org/10.1007/978-1-4939-6622-6_18) · [Model paper](paper001_guenomu.md) · [Current output guide](../output.md)
 
-David Posada^1^ -- dposada@uvigo.es
+> Reading edition of the supplied chapter. Manuscript front matter, empty figure placeholders and conversion markup have been removed. References to figures link to the published chapter; the images are not included here. This is a historical description of the software. For current installation and MPI output, see the [installation guide](../installation.md) and [output guide](../output.md).
 
-^1^ Department of Biochemistry, Genetics and Immunology, University of
-Vigo, Spain
-
-^2^ Department of Materials, Imperial College London, UK
-
-RUNNING HEAD: Genome-wide Species Tree Estimation
-
-Species Tree Estimation from Genome-wide Data with Guenomu
-
-Summary
+## Summary
 
 The history of particular genes and that of the species that carry them
 can be different for a variety of reasons. In particular, gene trees and
@@ -36,7 +26,7 @@ species tree topologies.
 phylogenetics, tree distance, species tree, duplications and losses,
 incomplete lineage sorting.
 
-# 1 . Estimation of species trees
+## 1. Estimation of species trees
 
 If we define a species as a group of interbreeding individuals, then a
 species tree will describe the series of reproductive isolation events
@@ -55,8 +45,6 @@ phenomena can lead to gene trees in disagreement with the history of the
 species, even assuming we can reconstruct the gene phylogenies without
 error.
 
-\<\< figure 1 \>\>
-
 Many methods have been developed to infer the evolutionary history of
 the species as a whole. One strategy is to judiciously select a "core"
 gene set that can be assumed to be a good representation of the
@@ -71,7 +59,7 @@ of the available genetic information, and therefore should incorporate
 gene tree reconstruction while accounting for the disagreement between
 the gene and species phylogenetic histories. Such species methods can be
 broadly divided between the supertree *(11, 12)* and supermatrix *(13,
-14)* approaches, which are represented visually in Figure 1. What we
+14)* approaches, which are represented visually in [Figure 1 in the published article](https://doi.org/10.1007/978-1-4939-6622-6_18). What we
 will call gene families are actually the homologous sets -- the
 collections of sequences that can be aligned and safely assumed to have
 a common ancestor. Supermatrix methods depend on an exact correspondence
@@ -82,20 +70,30 @@ improvements have made it possible to analyse more general data sets, as
 the distance matrix-based inference under the coalescent *(15)* or the
 Gene Tree Parsimony reconciliation *(16, 17)*.
 
-# 2. Bayesian inference of species trees
+## 2. Bayesian inference of species trees
 
 The Bayesian paradigm offers an elegant solution to the problem of
 reconciling gene trees and species trees, since it makes the
 hierarchical relation between them explicit. In the same way as the
 dependence between the gene alignment D and the gene tree G can be
 described probabilistically by the phylogenetic likelihood function
-P(D\|G) *(18)*, the gene tree can also be treated as a stochastic
-parameter depending on a species tree S, as in P(G\|S) -- where the
-particular form of P(G\|S) varies depending on our assumptions about the
+$P(D\mid G)$ *(18)*, the gene tree can also be treated as a stochastic
+parameter depending on a species tree S, as in $P(G\mid S)$ -- where the
+particular form of $P(G\mid S)$ varies depending on our assumptions about the
 G-S disagreement. This will lead to a hierarchical Bayesian model of the
-form P(S\|D) ∝ P(D\|G) P(G\|S) P(S), where multi-gene data sets can be
-naturally partitioned as P(S\|D) ∝ P(S) ∏ P(D~i~ \|G~i~ ) P(G~i~ \|S)
-(where we exclude other parameters for clarity.)
+form
+
+$$
+P(S\mid D) \propto P(D\mid G)\,P(G\mid S)\,P(S).
+$$
+
+For multiple gene families, this becomes
+
+$$
+P(S\mid D) \propto P(S)\prod_i P(D_i\mid G_i)\,P(G_i\mid S),
+$$
+
+where other parameters are omitted for clarity.
 
 This idea has been implemented, with more or less success, under a few
 models -- for a review, see *(19)*. A full Bayesian inference model for
@@ -108,19 +106,19 @@ maximum-likelihood approach based on a simplified version of this
 birth-death model has recently been shown to allow for species tree
 estimation under a hierarchical model *(23)*. Recently, we developed a
 Bayesian model that takes into account several sources of disagreement
-between G and S by assuming that P(G\|S) follows a multivariate
+between G and S by assuming that $P(G\mid S)$ follows a multivariate
 exponential distribution over distances between G and S *(24)*. This
 distribution works as a penalty against species and gene trees that are
 very dissimilar under several biologically plausible scenarios. Under
 this assumption, the model can work with data sets where the orthology
 relations are unknown, in contrast to the other implementations.
 
-# 3. The software *Guenomu*
+## 3. The software *Guenomu*
 
 Here we will focus on our novel hierarchical Bayesian procedure for
 species tree estimation, which is part of the Guenomu package (openly
 available at
-[[http://bitbucket.org/leomrtns/guenomu/]{.underline}](https://bitbucket.org/leomrtns/guenomu/).)
+[http://bitbucket.org/leomrtns/guenomu/](https://bitbucket.org/leomrtns/guenomu/).)
 The main program in this package is called guenomu, which takes as input
 a collection of gene trees (posterior distributions or point estimates)
 and generates a posterior sample of species trees under a multivariate
@@ -146,7 +144,7 @@ trees can have several sequences from the same species. To emphasize the
 generality of these gene data sets, we will call them "gene families" in
 what follows.
 
-# 3.1 *Guenomu* programs
+### 3.1 *Guenomu* programs
 
 The Guenomu package is composed of several programs, of which the main
 one is the Bayesian sampler, called guenomu. Besides the main MCMC
@@ -155,7 +153,9 @@ that can be executed independently from the main program. We will
 discuss mainly the Bayesian sampler, but below is a description of other
 auxiliary functionality offered by the package.
 
-**3.1.1 Bayesian sampler**
+
+#### 3.1.1 Bayesian sampler
+
 
 Given a collection of gene families, guenomu will estimate the posterior
 distribution of species trees together with other parameters pertaining
@@ -182,14 +182,18 @@ output of guenomu is a file or a set of files in a compact binary
 format, that must be interpreted by the same program guenomu in order to
 output human-readable files.
 
-**3.1.2 Maximum likelihood (ML) estimation of species trees**
+
+#### 3.1.2 Maximum likelihood (ML) estimation of species trees
+
 
 Usually an MCMC Bayesian sampler can also be used as a ML estimator by
 simply controlling the temperature of the Monte Carlo chains, as in
 simulated annealing *(28).* This can be easily achieved by changing a
 few options in the same program guenomu, as we will see shortly.
 
-**3.1.3 Summary-statistics coalescent species trees**
+
+#### 3.1.3 Summary-statistics coalescent species trees
+
 
 One important auxiliary functionality of the Guenomu package is offered
 through the program bmc2_maxtree, which estimates the species tree under
@@ -202,7 +206,9 @@ algorithm. These algorithms rely strongly on the branch lengths of the
 gene trees (see Note 3), but if these are absent then the program will
 assume that they are all equal to one.
 
-**3.1.4 Pairwise distances between trees**
+
+#### 3.1.4 Pairwise distances between trees
+
 
 Another useful auxiliary program is bmc2_tree, which calculates all
 pairwise distances between a set of gene trees and a set of species
@@ -218,7 +224,9 @@ trees, since the distances are defined between unrooted gene trees and
 rooted species trees -- hence it does consider the root of the species
 trees, when defined.
 
-**3.1.5 Simulation of tree inference error**
+
+#### 3.1.5 Simulation of tree inference error
+
 
 The guenomu program can benefit from the uncertainty in the estimation
 of individual gene trees, since it allows the model to consider
@@ -233,7 +241,7 @@ also works on trees without branch lengths, and can be used to
 preprocess the gene tree files estimated by the user before the Bayesian
 analysis conducted by guenomu.
 
-# 4 . Input files
+## 4. Input files
 
 The guenomu sampler estimates the set of species trees compatible with
 the phylogenetic information from a set of gene families, which are
@@ -282,7 +290,7 @@ by a Bayesian analysis, and can actually be bootstrap replicates or even
 a point estimate as the maximum likelihood tree -- but we warn that in
 such cases the probabilistic interpretation is lost.
 
-# 5. Running Guenomu
+## 5. Running Guenomu
 
 You can run guenomu by including all settings into a control file (and
 run it like "guenomu run.ctrl"), or by setting the parameters as command
@@ -311,17 +319,13 @@ cannot be mapped to any species in the list will result in error.
 Both lists (of gene tree files and species names) can be given as a text
 file, or added directly into the control file. If included directly in
 the control file, then they must be between the commands
-"begin_list_of\_" and "end_of_list", as in the example of Figure 2.
-
-\<\< figure 2 \>\>
+"begin_list_of\_" and "end_of_list", as in the example of [Figure 2 in the published article](https://doi.org/10.1007/978-1-4939-6622-6_18).
 
 Notice how the comments in brackets are ignored, but still may contain
 useful tips. Alternatively, if the lists of gene tree files and species
 names are written in files -- let us say, "list_of_trees.txt" and
 "list_of_species.txt", respectively, then these file names can be
-included in the control file, as shown in Figure 3.
-
-\<\< figure 3\>\>
+included in the control file, as shown in [Figure 3 in the published article](https://doi.org/10.1007/978-1-4939-6622-6_18).
 
 Or, equivalently, these file names can be given at run time to guenomu
 as arguments "\--genetrees=list_of_genes.txt
@@ -336,7 +340,7 @@ in the control file are (with examples of values):
     > disagreements, and furthermore this value is shared across
     > distances (since they are all rescaled to the interval \[0,1\]).
     > Corresponds exactly to the parameter controlling the
-    > hyperhyperprior P(lambda_zero) (see Martins et al., 2014).
+    > hyperhyperprior $P(\lambda_0)$ (see Martins et al., 2014).
 
 -   **param_n_generations = 10000 500000** : number of iterations for
     > the burnin stage followed by the number of iterations of the main
@@ -390,7 +394,7 @@ we run the program with the option "-z 0" for running the MCMC sampler
 and then run it once more, this time with the option "-z 1" to analyse
 its output.
 
-# 5.1 Optimization by simulated annealing
+### 5.1 Optimization by simulated annealing
 
 If the number of iterations for the main sampling stage of the Bayesian
 sampling is set to zero, then the program will behave differently: it
@@ -432,7 +436,7 @@ results are therefore a generalization of the SPR supertree approach
 *(35)*, the mulRF supertree *(32)* or the GTP methods *(17)*, and can be
 directly compared by choosing only the appropriate distances.
 
-# 5.2 Output
+### 5.2 Output
 
 The main sampler will store its output with all trees and parameters in
 a binary, compact format that can not be used by other programs. This
@@ -443,18 +447,18 @@ interpreted by another run of guenomu (with option "-z 1"), which will
 generate a single output file with all numeric parameters as well as the
 set of posterior species and gene family trees.
 
-**5.2.1 Posterior sample of numeric parameters**
+
+#### 5.2.1 Posterior sample of numeric parameters
+
 
 The output file with the discrete and continuous numeric parameters from
 all posterior samples is called "params.txt". One example file is shown
-in Figure 4 below. It is a tab-formatted file with a header row followed
+in [Figure 4 in the published article](https://doi.org/10.1007/978-1-4939-6622-6_18) below. It is a tab-formatted file with a header row followed
 by samples from the posterior distribution, one iteration per row. The
 header row contains the parameter names, where the order for gene-wise
 parameters follows the same order as input in the list of gene tree
 files. Each column represents one variable or statistic (function of the
 variables) from the posterior sample.
-
-\<\< figure 4\>\>
 
 Notice that only iterations after the burnin period are sampled, and
 that furthermore they are already "thinned" to avoid correlation between
@@ -490,7 +494,7 @@ While the set of parameters for gene X are:
 2.  **dup_X, los_X, dco_X, rfd_X** -- the distances between the gene and
     > species trees, for this iteration
 
-3.  d**up_lambda_X, los_lambda_X, dco_lambda_X, rfd_lambda_X** -- the
+3.  **dup_lambda_X, los_lambda_X, dco_lambda_X, rfd_lambda_X** -- the
     > estimated lambda of the exponential distribution, that is, the
     > penalty for this gene family
 
@@ -504,7 +508,9 @@ sufficient conditions for good convergence, and programs like Tracer and
 Coda can better assess how the posterior distribution has been explored
 by our sampler.
 
-**5.2.2 Output trees**
+
+#### 5.2.2 Output trees
+
 
 Besides the output file with numeric parameters, guenomu also outputs
 the resampled gene tree files as well as the posterior distribution of
@@ -540,13 +546,9 @@ of MrBayes *(25)*; 2) the "consensus()" function of the ape library for
 R *(38)*; 3) the "consensus" method of the dendropy module for python
 *(39)*. We do, however, suggest to always check also the posterior
 frequencies directly from the trprobs files to have an idea about the
-sharpness of the distributions. On Figure 5 we show an example of the
+sharpness of the distributions. On [Figure 5 in the published article](https://doi.org/10.1007/978-1-4939-6622-6_18) we show an example of the
 file "species.tre", that can be compared to the file "species.trprobs"
-from Figure 6.
-
-\<\< figure 5 \>\>
-
-\<\< figure 6\>\>
+from [Figure 6 in the published article](https://doi.org/10.1007/978-1-4939-6622-6_18).
 
 Notice how in this file the trees are ordered by frequency, where for
 instance the tree number 3 is the so-called maximum a posteriori (MAP)
@@ -561,11 +563,9 @@ posterior distribution assuming that the sampled species trees are
 unrooted. It is helpful to compare it with "species.trprobs" in order to
 verify if the samples differ only in their rooting, in which case we
 might conclude when the data does not allow the model to distinguish
-between different root locations. In Figure 7 we show the
+between different root locations. In [Figure 7 in the published article](https://doi.org/10.1007/978-1-4939-6622-6_18) we show the
 "unrooted.trprobs" file equivalent to the rooted file described in
-Figure 6.
-
-\<\< figure 7 \>\>
+[Figure 6 in the published article](https://doi.org/10.1007/978-1-4939-6622-6_18).
 
 The trees are still rooted according to the newick format, but its root
 node can be safely ignored. In the above example we can see how the
@@ -577,7 +577,7 @@ Note that guenomu is very fast, such that a single run on a data set
 with 447 gene family tree distributions and 37 species *(40)* would take
 less than 6 hours using a single processor.
 
-# 6. Conclusion
+## 6. Conclusion
 
 The evolutionary history of the species cannot be postulated to follow
 the phylogeny of a few genes without making too many arbitrary
@@ -591,7 +591,7 @@ implemented in the program guenomu, that tries to integrate strengths
 from both approaches, allowing at the same time for full utilization of
 complex data sets under minimal assumptions.
 
-# 7. Notes 
+## 7. Notes
 
 1.  Parsimony reconciliation algorithms try to find the minimal cost
     > under an evolutionary scenario with duplications and/or deep
@@ -633,7 +633,7 @@ complex data sets under minimal assumptions.
     > can also be estimated as the minimum (GLASS and MAC) or the
     > average (STEAC and SD) across gene-level values
 
-# References
+## References
 
 1.  Rannala, B., and Yang, Z (2008). Phylogenetic inference using whole
     genomes. *Ann Rev Genomics and Human Genetics* 9, 217-231.
@@ -769,7 +769,7 @@ complex data sets under minimal assumptions.
 
 36. Rambaut, A., Suchard M.A., Xie, D., and Drummond, A. (2013) Tracer
     v1. 5. Available at
-    [[http://beast.bio.ed.ac.uk/tracer]{.underline}](http://beast.bio.ed.ac.uk/tracer).
+    [http://beast.bio.ed.ac.uk/tracer](http://beast.bio.ed.ac.uk/tracer).
 
 37. Plummer, M., Best, N., Cowles, K., and Vines, K. (2006) Coda:
     Convergence diagnosis and output analysis for mcmc. *R News* 6,
@@ -786,53 +786,3 @@ complex data sets under minimal assumptions.
     conflict in eutherian mammal phylogeny using phylogenomics and the
     multispecies coalescent model. *Proc Natl Acad Sci USA* 109,
     14942-14947.
-
-FIGURE CAPTIONS
-
-Figure 1: Comparison between the supertree and supermatrix approaches.
-In the top panel we have an example data set composed of two gene
-families (homologous sets), already aligned. In this example we have
-several sequences from the same species in each gene family, which might
-represent paralogs within an individual sample or more than one sampled
-individual from the species. A supertree approach (middle panel) would
-then estimate the gene tree for each alignment independently and then
-summarise the information from all resulting gene trees into a single
-tree. A supermatrix approach, on the other hand, would first concatenate
-all gene family alignments into one single alignment, which would then
-be used in the phylogenetic reconstruction. Notice how for the
-supermatrix approach it is essential to find the correspondent sequences
-for all gene families, a limitation also imposed by several supertree
-methods. Therefore the user must decide which representative from each
-species to use, for all gene families. That is, does the sequence
-*sp1_1* from *gene family 1* correspond to *sp1_1* or *sp1_2* from *gene
-family 2*?
-
-Figure 2: Excerpt of an example control file for guenomu showing the
-list of gene tree files and the list of species names that should be
-found within the leaves of the gene trees.
-
-Figure 3: Control file options for guenomu that describe the file names
-containing lists of gene trees and of species names.
-
-Figure 4: Example of file params.txt with posterior samples of
-parameters from the MCMC chain. The first columns, represented in red,
-are the global parameters, while the remaining columns represent the
-parameters per gene family. For this example only duplications and
-losses were used for two gene families.
-
-Figure 5: Example of "species.tre" file output by guenomu. In this file
-we have one tree topology per MCMC iteration, where identical trees can
-be identified by the descriptor "idx" (which is a comment according to
-the nexus format and therefore does not interfere with other programs.)
-
-Figure 6: Example of guenomu's "species.trprobs" output file. Unlike the
-"species.tre" file (see Figure 5), distinct topologies appear only once,
-and furthermore are ordered according to their posterior frequencies
-(described within comments).
-
-Figure 7: Example of "unrooted.trprobs" output file from the guenomu
-software. This file has the same information as "species.trprobs"
-(Figure 6) but where the root location of each topology was neglected --
-therefore joining several trees that differ only in the root location.
-Notice how the trees are still represented as rooted (deepest node is a
-dichotomy), just to ease reading and visualization.

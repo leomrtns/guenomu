@@ -7,5 +7,5 @@
   - [Model paper](papers/paper001_guenomu.md)
   - [Software chapter](papers/paper002_guenomu.md)
 - Reference
-  - [Random number generation](reference/random_number_generation.txt)
-  - [License](reference/gpl.licence)
+  - [Random number generation](reference/random-number-generation.md)
+  - [License](reference/license.md)

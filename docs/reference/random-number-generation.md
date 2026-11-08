@@ -1,6 +1,13 @@
+# Random number generation
+
+Historical implementation notes and source attributions. The original technical text is preserved below; this is not an updated recommendation for choosing a generator.
+
+## Tausworthe generator (TAUS)
+
+```text
 TAUS: Maximally equidistributed combined Tausworthe random number generator. The original description (from The Gnu 
 Scientific Library http://www.gnu.org/software/gsl) follows:
-   \verbatim
+   
 	 This is a maximally equidistributed combined Tausworthe generator. The sequence is,
 
    x_n = (s1_n ^ s2_n ^ s3_n) 
@@ -43,11 +50,16 @@ Computation, 68, 225 (1999), 261--269: http://www.iro.umontreal.ca/~lecuyer/myft
    Update: November 2002
    There was a bug in the correction to the seeding procedure for s2. It affected the following seeds 
    254679140 1264751179 1519430319 2274823218 2529502358 3284895257 3539574397 (s2 < 8).
-	 \endverbatim
+	 
 
+```
+
+## Four-tap shift-register generator (GFSR4)
+
+```text
 GFSR4: Lagged-bonacci generator.  The original description (from The Gnu Scientific Library 
 http://www.gnu.org/software/gsl) follows:
-   /verbatim
+   
    From Robert M. Ziff, "Four-tap shift-register-sequence random-number generators," Computers in Physics 12(4), Jul/Aug
 1998, pp 385-392.  A generalized feedback shift-register (GFSR) is basically an xor-sum of particular past lagged values. 
 A four-tap register looks like:
@@ -74,14 +86,17 @@ two, n&M is a potentially quicker implementation of the equivalent n%(M+1).
 
    This implementation copyright (C) 1998 James Theiler, based on the example mt.c in the GSL, as implemented by Brian
 Gough.
-	 \endverbatim
+	 
 
 
---------------
+```
 
-the sampling from an arbitrary discrete distribution in O(1) time is taken from the GSL version 1.14. The original
+## Constant-time discrete sampling
+
+```text
+The sampling from an arbitrary discrete distribution in O(1) time is taken from the GSL version 1.14. The original
 explanation follows:
-\beginverbatim
+
 /* Gnu Scientific Library gsl-1.14/randist/discrete.c [http://www.gnu.org/software/gsl/]
  * 
  * Copyright (C) 1996, 1997, 1998, 1999, 2000, 2007, 2009 James Theiler, Brian Gough
@@ -188,4 +203,4 @@ explanation follows:
  * GSL package.
    
  * Written 26 Jan 1999, James Theiler, jt@lanl.gov */
-\endverbatim
+```
