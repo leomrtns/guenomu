@@ -54,7 +54,7 @@ double
 biomcmc_dexp_dt (double d, double lambda, double m, bool log_p)
 {
   double prob_sum;
-  if ( (d==NaN) || (lambda==NaN) || (m==NaN)|| (d < 0.) || (lambda <= 0.) || (m < 1.)) return NaN;
+  if ( (isnan (d)) || (isnan (lambda)) || (isnan (m))|| (d < 0.) || (lambda <= 0.) || (m < 1.)) return NaN;
   if (d > m)  return log_p ? mInf : 0.;
   prob_sum = biomcmc_expm1 (-lambda * (m + 1.)) / biomcmc_expm1 (-lambda); /* expm1(x) = (exp(x) - 1) when x ~ 0 */
 
@@ -65,7 +65,7 @@ biomcmc_dexp_dt (double d, double lambda, double m, bool log_p)
 double
 biomcmc_pexp_dt (double d, double lambda, double m, bool log_p)
 {
-  if ( (d==NaN) || (lambda==NaN) || (m==NaN)|| (d < 0.) || (lambda <= 0.) || (m < 1.)) return NaN;
+  if ( (isnan (d)) || (isnan (lambda)) || (isnan (m))|| (d < 0.) || (lambda <= 0.) || (m < 1.)) return NaN;
   if (d >= m) return log_p ? 0. : 1.;
 
   return log_p ? 
@@ -78,7 +78,7 @@ double
 biomcmc_qexp_dt (double p, double lambda, double m, bool log_p)
 {
   double x;
-  if ( (p==NaN) || (lambda==NaN) || (m==NaN)|| (lambda <= 0.) || (m < 1.)) return NaN;
+  if ( (isnan (p)) || (isnan (lambda)) || (isnan (m))|| (lambda <= 0.) || (m < 1.)) return NaN;
 
   if (log_p) {         if (p > 0.) return NaN; if (p == 0.) return m; if (p == mInf) return 0.; }
   else { if ((p < 0.) || (p > 1.)) return NaN; if (p == 1.) return m;   if (p == 0.) return 0.; }
@@ -94,7 +94,7 @@ biomcmc_dgamma (double x, double alpha, double beta, bool log_p)
 {
   double pr;
 
-  if ( (x==NaN) || (alpha==NaN) || (beta==NaN)|| (alpha < 0.) || (beta <= 0.)) return NaN;
+  if ( (isnan (x)) || (isnan (alpha)) || (isnan (beta))|| (alpha < 0.) || (beta <= 0.)) return NaN;
 
   if (x < 0.) return log_p ? mInf : 0.;
   if (alpha == 0.) return (x == 0.)? pInf : (log_p ? mInf : 0.);
@@ -127,7 +127,7 @@ biomcmc_qgamma (double p, double alpha, double beta, bool log_p)
   double p_, a, b, c, g, ch, ch0, p1, p2, q, s1, s2, s3, s4, s5, s6, t, x;
   int i, max_it_Newton = 1;
 
-  if ( (p==NaN) || (alpha==NaN) || (beta==NaN)|| (alpha < 0.) || (beta <= 0.)) return NaN;
+  if ( (isnan (p)) || (isnan (alpha)) || (isnan (beta))|| (alpha < 0.) || (beta <= 0.)) return NaN;
 
   if (log_p) { if (p > 0.) return NaN; if (!p) return pInf; if (p == mInf) return 0.; }
   else { if ((p < 0.) || (p > 1.)) return NaN; if (!p) return 0.; if (p==1.) return pInf; }
@@ -201,9 +201,9 @@ END:
 double 
 biomcmc_pgamma (double x, double alpha, double beta, bool log_p)
 {
-  if ( (x==NaN) || (alpha==NaN) || (beta==NaN)|| (alpha < 0.) || (beta <= 0.)) return NaN;
+  if ( (isnan (x)) || (isnan (alpha)) || (isnan (beta))|| (alpha < 0.) || (beta <= 0.)) return NaN;
   x *= beta;
-  if (x == NaN) return NaN;
+  if (isnan (x)) return NaN;
   if (!alpha) return (x < 0.)?(log_p? mInf: 0.) : (log_p? 0.: 1.); /* limit case; useful e.g. in pnchisq() */
   return pgamma_raw (x, alpha, log_p);
 }
@@ -211,7 +211,7 @@ biomcmc_pgamma (double x, double alpha, double beta, bool log_p)
 double
 biomcmc_dnorm (double x, double mu, double sigma, bool log_p)
 {
-  if ((x==NaN) || (mu==NaN) || (sigma==NaN) || ((!biomcmc_isfinite (x)) && (mu == x)) || (sigma < 0.)) return NaN;
+  if ((isnan (x)) || (isnan (mu)) || (isnan (sigma)) || ((!biomcmc_isfinite (x)) && (mu == x)) || (sigma < 0.)) return NaN;
   if ((!biomcmc_isfinite (sigma)) || ((sigma == 0.) && (x != mu))) return log_p ? mInf : 0.;
   if ((sigma == 0.) && (mu == x)) return pInf; 
 
@@ -233,7 +233,7 @@ biomcmc_qnorm (double p, double mu, double sigma, bool log_p)
 {
   double p_, q, r, val;
 
-  if ((p==NaN) || (mu==NaN) || (sigma==NaN) || (sigma < 0.)) return NaN;
+  if ((isnan (p)) || (isnan (mu)) || (isnan (sigma)) || (sigma < 0.)) return NaN;
   if(sigma == 0)	return mu;
 
   if (log_p) {         if (p > 0.) return NaN; if (p == 0.) return pInf; if (p == mInf) return mInf; }
@@ -300,7 +300,7 @@ biomcmc_pnorm (double x, double mu, double sigma, bool log_p)
 {
   double p, cp;
 
-  if ((x==NaN) || (mu==NaN) || (sigma==NaN) || ((!biomcmc_isfinite (x)) && (mu == x)) || (sigma < 0.)) return NaN;
+  if ((isnan (x)) || (isnan (mu)) || (isnan (sigma)) || ((!biomcmc_isfinite (x)) && (mu == x)) || (sigma < 0.)) return NaN;
   if (sigma == 0.) return (x < mu) ? (log_p? mInf : 0.) : (log_p ? 0. : 1.);
 
   p = (x - mu) / sigma;
@@ -316,7 +316,7 @@ biomcmc_dlnorm (double x, double meanlog, double sdlog, bool log_p)
 {
   double y;
 
-  if ((x == NaN) || (meanlog == NaN) || (sdlog == NaN) || (sdlog <= 0.)) return NaN;
+  if ((isnan (x)) || (isnan (meanlog)) || (isnan (sdlog)) || (sdlog <= 0.)) return NaN;
   if (x <= 0.) return log_p ? mInf : 0.;
 
   y = (log (x) - meanlog) / sdlog;
@@ -328,7 +328,7 @@ biomcmc_dlnorm (double x, double meanlog, double sdlog, bool log_p)
 double 
 biomcmc_qlnorm (double p, double meanlog, double sdlog, bool log_p)
 {
-  if ((p == NaN) || (meanlog == NaN) || (sdlog == NaN)) return NaN;
+  if ((isnan (p)) || (isnan (meanlog)) || (isnan (sdlog))) return NaN;
 
   if (log_p) {         if (p > 0.) return NaN; if (p == 0.) return pInf; if (p == mInf) return 0.; }
   else { if ((p < 0.) || (p > 1.)) return NaN; if (p == 1.) return pInf;   if (p == 0.) return 0.; }
@@ -339,7 +339,7 @@ biomcmc_qlnorm (double p, double meanlog, double sdlog, bool log_p)
 double 
 biomcmc_plnorm (double x, double meanlog, double sdlog, bool log_p)
 {
-  if ((x == NaN) || (meanlog == NaN) || (sdlog == NaN) || (sdlog <= 0.)) return NaN;
+  if ((isnan (x)) || (isnan (meanlog)) || (isnan (sdlog)) || (sdlog <= 0.)) return NaN;
   if (x <= 0.) return log_p ? mInf : 0.;
   return biomcmc_pnorm (log (x), meanlog, sdlog, log_p);
 }
@@ -347,7 +347,7 @@ biomcmc_plnorm (double x, double meanlog, double sdlog, bool log_p)
 double 
 biomcmc_dpois (double x, double lambda, bool log_p)
 { /* E[X] = lambda (remember that lambda is related to "alpha" of gamma distrib, NOT "beta" */ 
-  if ((x == NaN) || (lambda== NaN) || (lambda < 0.)) return NaN;
+  if ((isnan (x)) || (isnan (lambda)) || (lambda < 0.)) return NaN;
   if ((x < 0) || (!biomcmc_isfinite (x)) || (fabs (x - floor (x + 0.5)) > 1e-7)) return log_p ? mInf : 0.;
   x = floor (x + 0.5);
   return dpois_raw (x, lambda, log_p);
@@ -360,7 +360,7 @@ double
 biomcmc_qpois (double p, double lambda, bool log_p)
 {
   double mu, sigma, gamma, z, y;
-  if ((p == NaN) || (lambda== NaN) || (lambda < 0.) || (!biomcmc_isfinite (lambda))) return NaN;
+  if ((isnan (p)) || (isnan (lambda)) || (lambda < 0.) || (!biomcmc_isfinite (lambda))) return NaN;
 
   if (log_p) {         if (p > 0.) return NaN; if (p == 0.) return pInf; if (p == mInf) return 0.; }
   else { if ((p < 0.) || (p > 1.)) return NaN; if (p == 1.) return pInf;   if (p == 0.) return 0.; }
@@ -402,7 +402,7 @@ biomcmc_qpois (double p, double lambda, bool log_p)
 double 
 biomcmc_ppois (double x, double lambda, bool log_p)
 {
-  if ((x == NaN) || (lambda== NaN) || (lambda < 0.)) return NaN;
+  if ((isnan (x)) || (isnan (lambda)) || (lambda < 0.)) return NaN;
   if (x < 0)               return log_p ? mInf : 0.;
   if (lambda == 0.)        return log_p ? 0. : 1.;
   if (!biomcmc_isfinite (x)) return log_p ? 0. : 1.;
@@ -522,7 +522,7 @@ biomcmc_rng_gamma (double alpha, double beta)
 double
 biomcmc_rng_norm (double mu, double sigma)
 {
-  if ((mu == NaN) || (!biomcmc_isfinite (sigma)) || (sigma < 0.)) return NaN;
+  if ((isnan (mu)) || (!biomcmc_isfinite (sigma)) || (sigma < 0.)) return NaN;
   if ((sigma == 0.) || (!biomcmc_isfinite (mu))) return mu;
   return mu + sigma * biomcmc_rng_snorm ();
 }
@@ -530,7 +530,7 @@ biomcmc_rng_norm (double mu, double sigma)
 double
 biomcmc_rng_lnorm (double meanlog, double sdlog)
 {
-  if ((meanlog == NaN) || (!biomcmc_isfinite (sdlog)) || (sdlog < 0.)) return NaN;
+  if ((isnan (meanlog)) || (!biomcmc_isfinite (sdlog)) || (sdlog < 0.)) return NaN;
   if (sdlog == 0.) return exp (meanlog);
   if (!biomcmc_isfinite (meanlog)) return meanlog;
   return exp (meanlog + sdlog * biomcmc_rng_snorm ());
@@ -765,7 +765,7 @@ biomcmc_gammafn (double x)
     dxrel = sqrt (DBL_EPSILON); /* = sqrt(DBL_EPSILON) = 2^{-26}  */ 
   }
 
-  if(x == NaN) return x;
+  if(isnan (x)) return x;
   /* If the argument is exactly zero or a negative integer then return NaN. */
   if ((x == 0) || ((x < 0) && (x == (long)x))) return NaN;
   y = fabs (x);
@@ -899,13 +899,17 @@ double biomcmc_expm1 (double x)
 
 bool biomcmc_isfinite (double x)
 {
-  return ((x != NaN) & (x != pInf) & (x != mInf));
+  return isfinite (x);
 }
 
 /* Compute log (exp (logx) + exp (logy)) without overflow and without loss of accuracy. */
 double 
 biomcmc_logspace_add (double logx, double logy)
 {
+  if (isnan (logx) || isnan (logy)) return NaN;
+  if (logx == mInf) return logy;
+  if (logy == mInf) return logx;
+  if ((logx == pInf) || (logy == pInf)) return pInf;
   if (logx > logy) return logx + biomcmc_log1p (exp (logy - logx));
   else             return logy + biomcmc_log1p (exp (logx - logy));
 }
@@ -967,9 +971,12 @@ new_discrete_sample_from_frequencies (double *prob, size_t size)
 
   /* Make sure elements of ProbArray[] are positive, and normalize s.t. sums up to one */
   for (i = 0; i < size; i++) {
-    if (prob[i] < 0.) biomcmc_error ("found a negative probability on sampling of empirical frequencies");
+    if (!biomcmc_isfinite (prob[i]) || (prob[i] < 0.))
+      biomcmc_error ("empirical frequencies must be finite and nonnegative");
     pTotal += prob[i];
   }
+  if (!biomcmc_isfinite (pTotal) || (pTotal <= 0.))
+    biomcmc_error ("empirical frequencies must have a finite positive sum");
 
   g = (discrete_sample) biomcmc_malloc (sizeof (struct discrete_sample_struct));
   g->K = size;

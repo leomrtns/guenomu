@@ -144,6 +144,8 @@ initialize_gene_species (mcmc_chain chain)
     fprintf (stderr, "warning: there were %d species not found in any alignment:\n", chain->ctrl->species->nstrings - n_idx);
     for (j=0; j < chain->ctrl->species->nstrings; j++) if (!freq_sp[j]) fprintf (stderr, "\t%s\n", chain->ctrl->species->string[j]);
 #endif
+    for (j = 0; j < chain->ctrl->species->nstrings; j++) if (!freq_sp[j])
+      free (chain->ctrl->species->string[j]);
     char_vector_reduce_to_valid_strings (chain->ctrl->species, idx, n_idx); /* this will change size of species names */
     
     for (i = 0; i < chain->gs->n_genes; i++) { /* recreate reconciliation structures; this was a bug until 2017.09 */
@@ -340,6 +342,7 @@ del_mcmc_chain (mcmc_chain chain)
   if (chain->model.wb)     free (chain->model.wb);
   if (chain->model.wa)     free (chain->model.wa);
 
+  del_control_file (chain->ctrl);
   free (chain);
 }
 
@@ -441,11 +444,11 @@ del_multiple_try (multiple_try mtm)
   int i;
   if (!mtm) return;
   if (mtm->spTree) {
-    for (i = 2 * mtm->n_tries - 2; i >= 0; i--) del_topology (mtm->spTree[i]);
+    for (i = 2 * mtm->n_tries - 1; i >= 0; i--) del_topology (mtm->spTree[i]);
     free (mtm->spTree);
   }
   if (mtm->Qmat) {
-    for (i = 2 * mtm->n_tries - 2; i >= 0; i--) del_evolution_model (mtm->Qmat[i]);
+    for (i = 2 * mtm->n_tries - 1; i >= 0; i--) del_evolution_model (mtm->Qmat[i]);
     free (mtm->Qmat);
   }
   if (mtm->n_dli) { /* one "extra" element for auxiliary gene tree in exchange algo */

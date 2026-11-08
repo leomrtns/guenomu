@@ -1,0 +1,21 @@
+# Out-of-tree builds are recommended.
+/build*/
+/autom4te.cache/
+*~
+.deps/
+.libs/
+*.o
+*.lo
+*.la
+/config.log
+/config.status
+/libtool
+/Makefile
+/lib/Makefile
+/src/Makefile
+/src/test/Makefile
+/lib/config.h
+/lib/stamp-h1
+/biomcmc_guenomu.pc
+*.log
+*.trs

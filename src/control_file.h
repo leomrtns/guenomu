@@ -56,6 +56,7 @@ struct control_file_struct {
   double sa_temp_start, sa_temp_end;
 
   int original_ntrees; /* for MPI case, this info is otherwise lost */
+  int *gene_id; /* original input index for each local gene (checkpoint order is unchanged) */
   unsigned long long int seed;  /* uint64_t is harder to work with on MPI implementations... */
   biomcmc_rng rng_local, rng_global;
   int mpi_id, mpi_njobs;

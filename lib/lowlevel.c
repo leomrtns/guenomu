@@ -24,7 +24,7 @@ void *
 biomcmc_malloc (size_t size)
 {
   void *value = malloc (size);
-  if (value == NULL) biomcmc_error ( "biomcmc_malloc error allocating %d bites", size);
+  if (value == NULL) biomcmc_error ( "biomcmc_malloc error allocating %zu bytes", size);
   return value;
 }
 
@@ -32,7 +32,7 @@ void *
 biomcmc_realloc (void *ptr, size_t size)
 {
   void *value = (void *) realloc ((void *)ptr, size);
-  if (value == NULL) biomcmc_error ( "biomcmc_realloc error on pointer 0x%08X of %d bites\n", ptr, size);
+  if (value == NULL) biomcmc_error ( "biomcmc_realloc error allocating %zu bytes\n", size);
   return value;
 }
 
@@ -67,13 +67,13 @@ biomcmc_error (const char *template, ...)
 int
 compare_int_increasing (const void *a, const void *b)
 {
-  return (*(int *) a - *(int *) b);
+  return (*(int *) a > *(int *) b) - (*(int *) a < *(int *) b);
 }
 
 int
 compare_int_decreasing (const void *a, const void *b)
 {
-  return (*(int *) b - *(int *) a);
+  return (*(int *) a < *(int *) b) - (*(int *) a > *(int *) b);
 }
 
 int
@@ -216,7 +216,7 @@ char_vector_link_string_at_position (char_vector vec, char *string, int position
 {
   if (position >= vec->nstrings) char_vector_expand_nstrings (vec, position+1);
 
-  if (vec->nchars[position]) free (vec->string[position]);
+  if (vec->string[position]) free (vec->string[position]);
 
   vec->nchars[position] = strlen (string); /* Actually alloc'ed memory may be larger than this (next line fix it) */
   string = (char*) biomcmc_realloc ((char*)string, (vec->nchars[position]+1) * sizeof (char));
@@ -362,9 +362,9 @@ char_vector_remove_duplicate_strings (char_vector vec)
   int i, j, k, *valid, n_valid = 0;
   bool equal;
 
-  valid = (int*) biomcmc_malloc (vec->nstrings * sizeof (int));
-
   if (!vec->next_avail) return 0; /* if char_vector doesn't have any elements yet */
+
+  valid = (int*) biomcmc_malloc (vec->nstrings * sizeof (int));
 
   for (i=0; i < vec->nstrings - 1; i++) if (vec->string[i]) {
     valid[n_valid++] = i; /* valid since it is leftmost, and not NULLified before */
@@ -393,15 +393,25 @@ void
 char_vector_reduce_to_valid_strings (char_vector vec, int *valid, int n_valid)
 {
   int i;
+  char **strings = NULL;
+  size_t *nchars = NULL;
+
+  /* valid[] can reorder elements (notably for MPI load balancing). Copy before
+   * overwriting so a later source element is never replaced by an earlier one. */
+  if (n_valid) {
+    strings = (char**) biomcmc_malloc (n_valid * sizeof (char*));
+    nchars = (size_t*) biomcmc_malloc (n_valid * sizeof (size_t));
+  }
 
   for (i=0; i < n_valid; i++) {
-    vec->string[i] = vec->string[ valid[i] ];
-    vec->nchars[i] = vec->nchars[ valid[i] ];
+    strings[i] = vec->string[ valid[i] ];
+    nchars[i] = vec->nchars[ valid[i] ];
   }
-  vec->nstrings = n_valid;
-
-  vec->string = (char**)  biomcmc_realloc ((char**)  vec->string, n_valid * sizeof (char*));
-  vec->nchars = (size_t*) biomcmc_realloc ((size_t*) vec->nchars, n_valid * sizeof (size_t));
+  free (vec->string);
+  free (vec->nchars);
+  vec->string = strings;
+  vec->nchars = nchars;
+  vec->nstrings = vec->next_avail = n_valid;
 }  
 
 /* The hungarian method below is copied from http://www.informatik.uni-freiburg.de/~stachnis/misc.html

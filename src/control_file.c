@@ -33,7 +33,7 @@ new_control_file_from_argv (int argc, char **argv)
   struct arg_file *at_gene = arg_file0("G","genetrees" ,NULL, "file with list of gene tree file names, one gene tree file name per line");
   struct arg_file *at_ctrl = arg_file0(NULL,NULL,NULL, "Name of control file with remaining parameters (those defined also here overwrite those from control file)");
   struct arg_end  *at_end   = arg_end(20);
-  void* argtable[] = {at_help, at_lbda, at_nsa1, at_nsa2, at_t1,   at_t2,   at_ba1,  at_ba2, at_samp, at_prin, 
+  void* argtable[] = {at_help, at_mixt, at_lbda, at_nsa1, at_nsa2, at_t1,   at_t2,   at_ba1,  at_ba2, at_samp, at_prin,
                       at_mtm,  at_nmc,  at_act,  at_dstr, at_spec, at_gene, at_ctrl, at_end};
 
   if (arg_nullcheck(argtable)) biomcmc_error ("Problem allocating memory for the argtable (command line arguments) structure");
@@ -64,8 +64,8 @@ new_control_file_from_argv (int argc, char **argv)
     for (; i < Ndist; i++) ctrl->lambda_prior[i] = at_lbda->dval[0]; 
   }
   if (at_dstr->count) {
-    if (strlen(at_dstr->sval[0]) > Ndist) 
-      fprintf (stderr, "WARNING: bit description of distances is %zd, which is more than available ones\n", strlen(at_dstr->sval[0]));
+    if (strlen(at_dstr->sval[0]) != Ndist)
+      biomcmc_error ("distance description must contain exactly %d zeroes or ones", Ndist);
     for (i=0; i < Ndist; i++) ctrl->dist_string[i] = at_dstr->sval[0][i]; /* copy just first Ndist */
   }
   if (at_act->count) {
@@ -227,6 +227,7 @@ new_control_file (void)
   ctrl->rng_global = ctrl->rng_local = NULL;
   ctrl->mpi_id = ctrl->mpi_njobs = -1;
   ctrl->original_ntrees = 0;
+  ctrl->gene_id = NULL;
   return ctrl;
 }
 
@@ -237,6 +238,7 @@ del_control_file (control_file ctrl)
   if (--ctrl->ref_counter) return; /* other places are pointing at this instance */
 
   if (ctrl->magic) free (ctrl->magic);
+  if (ctrl->gene_id) free (ctrl->gene_id);
   del_char_vector (ctrl->checkpoint_filenames);
   del_char_vector (ctrl->gene_filenames);
   del_char_vector (ctrl->tree_filenames);
@@ -296,6 +298,8 @@ control_file_read_parameter_value (control_file ctrl, char *parameter, char *val
   else if (strcasestr (parameter, "use_distances")) {
     if ((n_read = sscanf (value, stringformat, bstring)) != 1) 
       control_file_read_error (parameter, value, n_read, "one string with 0's and 1's without spaces");
+    if (strlen(bstring) != Ndist || strcspn (value, " \t\r\n;") != Ndist)
+      biomcmc_error ("distance description must contain exactly %d zeroes or ones", Ndist);
     for (i=0; i < Ndist; i++) ctrl->dist_string[i] = bstring[i]; /* copy just first Ndist */
   }
 
@@ -429,6 +433,9 @@ set_default_mcmc_values (control_file ctrl)
   int i, zero = 0;
   if (ctrl->tree_filenames) char_vector_remove_duplicate_strings (ctrl->tree_filenames);
   else                      biomcmc_error ("Please give me a list of gene tree files for Importance Sampling");
+  ctrl->original_ntrees = ctrl->tree_filenames->nstrings;
+  ctrl->gene_id = (int*) biomcmc_malloc (ctrl->original_ntrees * sizeof (int));
+  for (i = 0; i < ctrl->original_ntrees; i++) ctrl->gene_id[i] = i;
   
   if (ctrl->species) {
     char_vector_remove_duplicate_strings (ctrl->species);
@@ -525,7 +532,10 @@ set_default_mcmc_values (control_file ctrl)
   if (!have_magic) biomcmc_error ("parameter values too extreme; please change them or include the magic numbers");
 
   zero = 0;
-  for (i = 0; i < Ndist; i++) if (ctrl->dist_string[i] == '0') zero++;
+  for (i = 0; i < Ndist; i++) {
+    if (ctrl->dist_string[i] == '0') zero++;
+    else if (ctrl->dist_string[i] != '1') biomcmc_error ("distance description may contain only zeroes or ones");
+  }
   if (zero == Ndist) biomcmc_error ("You must choose at least one distance to be used, cannot be all zero");
 
   /* if ((ctrl->action == ActionAnalyzeOutput) && 

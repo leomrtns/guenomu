@@ -498,7 +498,7 @@ qchisq_appr (double p, double nu, double g, bool log_p, double tol)
   static const double C[4] = {4.67, 6.66, 6.73, 13.32};
   double alpha, a, c, ch, p1, p2, q, t, x, rdtmacro;
 
-  if ((p==NaN) || (nu == NaN)) return NaN;
+  if ((isnan (p)) || (isnan (nu))) return NaN;
   if ( (log_p  && (p > 0)) || ((!log_p) && ((p < 0) || (p > 1))) ) return pInf;
   if (nu <= 0) return NaN;
 
@@ -558,7 +558,7 @@ void pnorm_both(double x, double *cum, double *ccum, int i_tail, bool log_p)
   double min = DBL_MIN;
   int i, lower, upper;
 
-  if(x == NaN) { *cum = *ccum = x; return; }
+  if(isnan (x)) { *cum = *ccum = x; return; }
   
   eps = DBL_EPSILON * 0.5; /* Consider changing these */
 

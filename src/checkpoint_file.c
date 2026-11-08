@@ -12,6 +12,10 @@ struct summary_struct
   int n_genes;    /* number of genes plus one for species tree (poor choice of name??) */
 
   FILE *param_stream; /* output file with parameters is saved "online" (=as we read the binary file) */
+  FILE *global_stream; /* params.txt, written by rank zero in original input order */
+  int *gene_order; /* local indices sorted by original input index */
+  int *gene_ids, *counts, *displs; /* MPI receive layout (gene blocks only) */
+  double *parameters;
 };
 
 void initialize_summary_struct (struct summary_struct *sum, mcmc_chain chain, int n_samples);
@@ -22,6 +26,9 @@ int  summary_struct_intvector_found (int *string, int *substring, int offset, in
 void summary_struct_trees_to_file (struct summary_struct *sum, mcmc_chain chain);
 void summary_unrooted_sptree_to_file (int *tree, int *tfreq, int ntrees, int tree_size, mcmc_chain chain);
 void summary_print_treefile_header (FILE *stream, topology tree);
+void summary_print_gene_header (FILE *stream, mcmc_chain chain, int gene_id);
+void summary_print_gene_parameters (FILE *stream, mcmc_chain chain, double *parameters);
+void summary_print_global_parameters (struct summary_struct *sum, mcmc_chain chain, int sample);
 
 void
 initialize_binary_file_struct (mcmc_chain chain)
@@ -177,6 +184,17 @@ binary_file_read_checkpoint_summarize (mcmc_chain chain)
   n_samples = (int) (filesize / (long int)(oneline));
   if (filesize % (long int)(oneline)) 
     fprintf (stderr, "WARNING: malformed checkpoint file (%ld read, %d expected), maybe unfinished run?\n", filesize, n_samples * oneline);
+#ifdef BIOMCMC_MPI
+  int min_samples, max_samples;
+  MPI_Allreduce (&n_samples, &min_samples, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+  MPI_Allreduce (&n_samples, &max_samples, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+  if (min_samples != max_samples) {
+    if (!chain->ctrl->mpi_id) fprintf (stderr, "MPI checkpoint files contain different numbers of complete samples.\n");
+    MPI_Finalize ();
+    exit (EXIT_FAILURE);
+  }
+#endif
+  if (!n_samples) biomcmc_error ("checkpoint file contains no complete samples");
 
   initialize_summary_struct (&summary, chain, n_samples);
 
@@ -206,7 +224,8 @@ binary_file_read_checkpoint_summarize (mcmc_chain chain)
 void
 initialize_summary_struct (struct summary_struct *sum, mcmc_chain chain, int n_samples)
 {
-  int i, j, job_id = 0, n_genes = chain->gs->n_genes + 1; /* ngenes + 1 since last one is species tree */
+  int i, j, k, job_id = 0, n_genes = chain->gs->n_genes + 1; /* ngenes + 1 since last one is species tree */
+  int ngenes = chain->gs->n_genes, block_size = 1 + 2 * chain->ndist;
   char filename[128];
 
   sum->n_samples = n_samples;
@@ -238,13 +257,58 @@ initialize_summary_struct (struct summary_struct *sum, mcmc_chain chain, int n_s
   sprintf (filename, "job%d.params.txt", job_id); 
   sum->param_stream = biomcmc_fopen (filename, "w");
   fprintf (sum->param_stream, "iter\tsptree");
-  for (i = 0; i < chain->gs->n_genes; i++) { 
-    fprintf (sum->param_stream, "\tlnl_%d", i);
-    for (j = 0; j < chain->ndist; j++) fprintf (sum->param_stream, "\t%s_%d",chain->distname[j], i);
-    for (j = 0; j < chain->ndist; j++) fprintf (sum->param_stream, "\t%s_lambda_%d",chain->distname[j], i);
+  sum->gene_order = (int*) biomcmc_malloc (ngenes * sizeof (int));
+  for (i = 0; i < ngenes; i++) {
+    k = i;
+    while (k && chain->ctrl->gene_id[sum->gene_order[k-1]] > chain->ctrl->gene_id[i]) {
+      sum->gene_order[k] = sum->gene_order[k-1];
+      k--;
+    }
+    sum->gene_order[k] = i;
   }
+  for (i = 0; i < ngenes; i++) summary_print_gene_header (sum->param_stream, chain, chain->ctrl->gene_id[sum->gene_order[i]]);
   for (j = 0; j < chain->ndist; j++) fprintf (sum->param_stream, "\t%s_hyperprior",chain->distname[j]);
   fprintf (sum->param_stream, "\n");
+
+  sum->global_stream = NULL;
+  sum->parameters = NULL;
+  sum->gene_ids = sum->counts = sum->displs = NULL;
+#ifdef BIOMCMC_MPI
+  if (!job_id) {
+    sum->counts = (int*) biomcmc_malloc (chain->ctrl->mpi_njobs * sizeof (int));
+    sum->displs = (int*) biomcmc_malloc (chain->ctrl->mpi_njobs * sizeof (int));
+    sum->gene_ids = (int*) biomcmc_malloc (chain->ctrl->original_ntrees * sizeof (int));
+  }
+  MPI_Gather (&ngenes, 1, MPI_INT, sum->counts, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  if (!job_id) {
+    for (i = 0, k = 0; i < chain->ctrl->mpi_njobs; i++) {
+      sum->displs[i] = k;
+      k += sum->counts[i];
+    }
+  }
+  MPI_Gatherv (chain->ctrl->gene_id, ngenes, MPI_INT, sum->gene_ids, sum->counts, sum->displs, MPI_INT, 0, MPI_COMM_WORLD);
+  if (!job_id) for (i = 0; i < chain->ctrl->mpi_njobs; i++) {
+    sum->counts[i] *= block_size;
+    sum->displs[i] *= block_size;
+  }
+#else
+  sum->gene_ids = (int*) biomcmc_malloc (ngenes * sizeof (int));
+  for (i = 0; i < ngenes; i++) sum->gene_ids[i] = i;
+#endif
+  if (!job_id) {
+    int *order = (int*) biomcmc_malloc (chain->ctrl->original_ntrees * sizeof (int));
+    for (i = 0; i < chain->ctrl->original_ntrees; i++) order[sum->gene_ids[i]] = i;
+    memcpy (sum->gene_ids, order, chain->ctrl->original_ntrees * sizeof (int));
+    free (order);
+    sum->parameters = (double*) biomcmc_malloc (chain->ctrl->original_ntrees * block_size * sizeof (double));
+    sum->global_stream = biomcmc_fopen ("params.txt", "w");
+    fprintf (sum->global_stream, "iter\tsptree");
+    for (j = 0; j < chain->ndist; j++) fprintf (sum->global_stream, "\t%s_hyperprior", chain->distname[j]);
+    fprintf (sum->global_stream, "\tlnl");
+    for (j = 0; j < chain->ndist; j++) fprintf (sum->global_stream, "\t%s", chain->distname[j]);
+    for (i = 0; i < chain->ctrl->original_ntrees; i++) summary_print_gene_header (sum->global_stream, chain, i);
+    fprintf (sum->global_stream, "\n");
+  }
 }
 
 void
@@ -262,8 +326,14 @@ del_summary_struct (struct summary_struct *sum)
   if (sum->ntrees)    free (sum->ntrees);
   if (sum->iteration) free (sum->iteration);
   if (sum->sptre_idx) free (sum->sptre_idx);
+  if (sum->gene_order) free (sum->gene_order);
+  if (sum->gene_ids) free (sum->gene_ids);
+  if (sum->counts) free (sum->counts);
+  if (sum->displs) free (sum->displs);
+  if (sum->parameters) free (sum->parameters);
 
   if (sum->param_stream) fclose (sum->param_stream);
+  if (sum->global_stream) fclose (sum->global_stream);
 }
 
 void
@@ -289,22 +359,63 @@ update_summary_struct_int (struct summary_struct *sum, int *ivec, int sample)
 int
 update_summary_struct_double (struct summary_struct *sum, mcmc_chain chain, int sample)
 {
-  int i, j = 0, k;
+  int i, j, k, block_size = 1 + 2 * chain->ndist;
 
-  fprintf (sum->param_stream, "%d\t%d\t", sum->iteration[sample], sum->sptre_idx[sample]);
-  for (i = 0; i < chain->gs->n_genes; i++) {
-    fprintf (sum->param_stream, "\t%12.8lf", chain->output.dvec[j++]); /* distance term of prior (originally was ln_likelihood)*/
-    for (k = 0; k < chain->ndist; k++) 
-      fprintf (sum->param_stream, "\t%4.0lf", chain->output.dvec[j++]); /* dups, loss, ils, spr  */
-    for (k = 0; k < chain->ndist; k++) 
-      fprintf (sum->param_stream, "\t%12.9lf", chain->output.dvec[j++]); /* lambda for (d,l,i,s)  prior */
-  }
+  fprintf (sum->param_stream, "%d\t%d", sum->iteration[sample], sum->sptre_idx[sample]);
+  for (i = 0; i < chain->gs->n_genes; i++)
+    summary_print_gene_parameters (sum->param_stream, chain, chain->output.dvec + block_size * sum->gene_order[i]);
+  j = block_size * chain->gs->n_genes;
   for (k = 0; k < chain->ndist; k++) 
     fprintf (sum->param_stream, "\t%12.9lf", chain->output.dvec[j++]); /* hyperprior for (d,l,i,s) -- lambda_0*/
   fprintf (sum->param_stream, "\n");
   fflush (sum->param_stream);
+  summary_print_global_parameters (sum, chain, sample);
 
   return j;
+}
+
+void
+summary_print_gene_header (FILE *stream, mcmc_chain chain, int gene_id)
+{
+  int j;
+  fprintf (stream, "\tlnl_%d", gene_id);
+  for (j = 0; j < chain->ndist; j++) fprintf (stream, "\t%s_%d", chain->distname[j], gene_id);
+  for (j = 0; j < chain->ndist; j++) fprintf (stream, "\t%s_lambda_%d", chain->distname[j], gene_id);
+}
+
+void
+summary_print_gene_parameters (FILE *stream, mcmc_chain chain, double *parameters)
+{
+  int k, j = 0;
+  fprintf (stream, "\t%12.8lf", parameters[j++]);
+  for (k = 0; k < chain->ndist; k++) fprintf (stream, "\t%4.0lf", parameters[j++]);
+  for (k = 0; k < chain->ndist; k++) fprintf (stream, "\t%12.9lf", parameters[j++]);
+}
+
+void
+summary_print_global_parameters (struct summary_struct *sum, mcmc_chain chain, int sample)
+{
+  int i, j, k, ngenes = chain->gs->n_genes, block_size = 1 + 2 * chain->ndist;
+  double total;
+#ifdef BIOMCMC_MPI
+  MPI_Gatherv (chain->output.dvec, ngenes * block_size, MPI_DOUBLE,
+               sum->parameters, sum->counts, sum->displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#else
+  memcpy (sum->parameters, chain->output.dvec, ngenes * block_size * sizeof (double));
+#endif
+  if (!sum->global_stream) return;
+  fprintf (sum->global_stream, "%d\t%d", sum->iteration[sample], sum->sptre_idx[sample]);
+  for (j = 0; j < chain->ndist; j++) fprintf (sum->global_stream, "\t%12.9lf", chain->output.dvec[ngenes * block_size + j]);
+  for (j = 0; j <= chain->ndist; j++) {
+    for (i = 0, total = 0.; i < chain->ctrl->original_ntrees; i++) total += sum->parameters[i * block_size + j];
+    fprintf (sum->global_stream, "\t%12.8lf", total);
+  }
+  for (i = 0; i < chain->ctrl->original_ntrees; i++) {
+    k = sum->gene_ids[i]; /* receive-buffer offset for this original input index */
+    summary_print_gene_parameters (sum->global_stream, chain, sum->parameters + block_size * k);
+  }
+  fprintf (sum->global_stream, "\n");
+  fflush (sum->global_stream);
 }
 
 int
@@ -380,17 +491,15 @@ summary_struct_trees_to_file (struct summary_struct *sum, mcmc_chain chain)
     del_empfreq (ef);
   }
   /* now save species trees from all iterations */
-  filename = (char*) biomcmc_malloc (32 * sizeof (char));
-  sprintf (filename, "species.tre"); 
-  topol = chain->gs->spTree;
-  stream = biomcmc_fopen (filename, "w");
-  summary_print_treefile_header (stream, topol);
-  for (j = 0; j < sum->n_samples; j++) fprintf (stream, "tree tree_%d [idx = %d] =  %s;\n", j, sum->sptre_idx[j], strsptre[ sum->sptre_idx[j] ]);
-  fprintf (stream, "\nEnd;\n");
-  fclose (stream);
+  if (!job_id) { /* all MPI jobs share the species tree; only one may write the common file */
+    stream = biomcmc_fopen ("species.tre", "w");
+    summary_print_treefile_header (stream, chain->gs->spTree);
+    for (j = 0; j < sum->n_samples; j++) fprintf (stream, "tree tree_%d [idx = %d] =  %s;\n", j, sum->sptre_idx[j], strsptre[ sum->sptre_idx[j] ]);
+    fprintf (stream, "\nEnd;\n");
+    fclose (stream);
+  }
   for (j = sum->ntrees[sum->n_genes -1] - 1; j >= 0; j--) if (strsptre[j]) free (strsptre[j]);
   free (strsptre);
-  free (filename);
 
   summary_unrooted_sptree_to_file (sum->tree[sum->n_genes-1], sum->trfreq[sum->n_genes-1], sum->ntrees[sum->n_genes-1], sum->tree_size[sum->n_genes-1], chain);
 }
@@ -459,6 +568,7 @@ summary_unrooted_sptree_to_file (int *tree, int *tfreq, int ntrees, int tree_siz
   fclose (stream);
   free (filename);
   del_empfreq (ef);
+  del_splitset (split);
 }
 
 void

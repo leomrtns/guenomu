@@ -1,0 +1,36 @@
+name: Build and test
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        mpi: [false, true]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential autoconf automake libtool pkg-config libargtable2-dev python3 mpich libmpich-dev
+      - name: Regenerate build files
+        run: ./bootstrap
+      - name: Configure
+        run: |
+          mkdir build
+          cd build
+          if [ '${{ matrix.mpi }}' = true ]; then
+            ../configure --enable-mpi MPICC=mpicc
+          else
+            ../configure --disable-mpi
+          fi
+      - name: Build and test
+        run: |
+          make -C build -j2
+          make -C build check
+      - name: Check source distribution
+        if: matrix.mpi == false
+        run: make -C build distcheck

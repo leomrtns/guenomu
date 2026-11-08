@@ -23,11 +23,6 @@ main (int argc, char **argv)
   time0 = clock ();
 #ifdef BIOMCMC_MPI
   setup_parallel_environment (ctrl);
-  if (ctrl->mpi_id == -2) { /* this job is larger tan the number of gene families, won't be needed  */
-    del_control_file (ctrl);
-    MPI_Finalize ();
-    return EXIT_SUCCESS;
-  }
 #endif
   print_presentation (ctrl);
  
@@ -74,8 +69,12 @@ setup_parallel_environment (control_file ctrl)
 #ifdef BIOMCMC_MPI /* this whole function is only called by parallel version, but serial version doesn't know these MPI functions */
   MPI_Comm_rank (MPI_COMM_WORLD, &(ctrl->mpi_id));
   MPI_Comm_size (MPI_COMM_WORLD, &(ctrl->mpi_njobs));
-  if (ctrl->mpi_id >= n_trees) { ctrl->mpi_id = -2; return; } /* more jobs than trees */
-  if (n_trees == 1) return; /* only one job (see prev line), with single tree file */
+  /* Every sampling collective uses MPI_COMM_WORLD; silently dropping idle ranks hangs the other jobs. */
+  if (ctrl->mpi_njobs > n_trees) {
+    if (!ctrl->mpi_id) fprintf (stderr, "Please use no more MPI processes than gene families (%d).\n", n_trees);
+    MPI_Finalize ();
+    exit (EXIT_FAILURE);
+  }
   /* broadcast sends "seed" from zero to all, overwritting "seed" if not zero */
   MPI_Bcast (&(ctrl->seed), 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD); /* seed was already set up to time_of_day (or user-defined) */
 #endif
@@ -88,11 +87,14 @@ setup_parallel_environment (control_file ctrl)
   
   ef = new_empfreq_sort_decreasing (tsize, n_trees, 2); /* 2 -> vector of ints (0=char, 1=size_t) */
   /* remove tree files that do not belong to this job, on sorted trees to improve balance */
-  for (i = 0; i < n_trees; i++) { /* inspired by function char_vector_remove_empty_strings() */
-    if ((i + ctrl->mpi_id) % ctrl->mpi_njobs) free (ctrl->tree_filenames->string[ef->i[i].idx]);
-    else  tsize[n_valid++] = ef->i[i].idx; /* tsize is actually recycled, to store idx of valid gene families */
+  for (i = 0; i < n_trees; i++) {
+    if (!((i + ctrl->mpi_id) % ctrl->mpi_njobs)) ctrl->gene_id[n_valid++] = ef->i[i].idx;
+    else {
+      free (ctrl->tree_filenames->string[ef->i[i].idx]);
+      ctrl->tree_filenames->string[ef->i[i].idx] = NULL;
+    }
   }
-  char_vector_reduce_to_valid_strings (ctrl->tree_filenames, tsize, n_valid);
+  char_vector_reduce_to_valid_strings (ctrl->tree_filenames, ctrl->gene_id, n_valid);
 
   del_empfreq (ef);
   if (tsize) free (tsize);

@@ -128,9 +128,9 @@ nonempty_fasta_line (char *string)
 { /* nonempty and not a comment */
   char *last = strchr (string, '\0'), *s;
 
-  if (*(last-1) == '\n') *(--last) = '\0'; // chomp final "\n"
+  if ((last > string) && (*(last-1) == '\n')) *(--last) = '\0'; // chomp final "\n"
 
-  if ((last-string) < 2) return false; /* just one character may be skipped */
+  if (last == string) return false;
   for (s = string; (s < last) && isspace (*s); s++); /* walk until find a nonempty char (or EOL) */
   if (s == last) return false;
   if ((s<last) && ((*s == '#') || (*s == ';'))) return false; /*first char is comment delimiter ('#' is an extension)*/

@@ -1,6 +1,5 @@
-AM_CPPFLAGS = $(GTKDEPS_CFLAGS)  @OPENMP_CPPFLAGS@
-AM_CFLAGS = @AM_CFLAGS@  @OPENMP_CFLAGS@
-LDADD = $(GTKDEPS_LIBS) $(AM_LDFLAGS)
+AM_CPPFLAGS = -I$(builddir)
+AM_CFLAGS = @AM_CFLAGS@ @OPENMP_CFLAGS@
 
 common_headers = hashtable.h lowlevel.h random_number_gen.h random_number.h nexus_common.h alignment.h \
                  topology_common.h topology_space.h topology_mrca.h bipartition.h topology_build.h \
@@ -11,5 +10,11 @@ common_src     = hashtable.c lowlevel.c random_number_gen.c random_number.c nexu
                  topology_splitset.c prob_distribution.c empirical_frequency.c phylogeny.c likelihood.c
 
 lib_LTLIBRARIES = libbiomcmc_guenomu.la
-libbiomcmc_guenomu_la_SOURCES = $(common_src) $(common_headers) biomcmc_guenomu.h 
+libbiomcmc_guenomu_la_SOURCES = $(common_src) $(common_headers) biomcmc_guenomu.h
+libbiomcmc_guenomu_la_LIBADD = $(LIBS)
+libbiomcmc_guenomu_la_LDFLAGS = -no-undefined
+pkginclude_HEADERS = $(common_headers) biomcmc_guenomu.h
+nodist_pkginclude_HEADERS = config.h
 
+# These implementation fragments are included directly rather than compiled separately.
+EXTRA_DIST = random_number_aux.h prob_distribution_aux.h prob_distribution_aux.c

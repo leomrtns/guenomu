@@ -1,153 +1,62 @@
-dnl Autoconf init, autoheader output location, config and prefix directories
+AC_PREREQ([2.69])
 AC_INIT([guenomu], [0.2], [leomrtns@gmail.com])
-
 AC_CONFIG_SRCDIR([src/main.c])
-AC_CONFIG_HEADER([lib/config.h])
-AC_PREFIX_DEFAULT(${HOME})
-dnl libtoolize recomendation
+AC_CONFIG_HEADERS([lib/config.h])
 AC_CONFIG_MACRO_DIR([m4])
-
-dnl Override default O2
-CFLAGS=${CFLAGS-""}
-CXXFLAGS=${CXXFLAGS-""}
-
-dnl automake initialization (completely unrelated to compiler arguments)
-AM_INIT_AUTOMAKE([-Wall -Werror])
-
-AC_USE_SYSTEM_EXTENSIONS
-dnl must be called after AC_USE_SYSTEM_EXTENSIONS (new restriction in autoconf2.68) 
-m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
-
-dnl Basic compiler and related tools
-AC_LANG_C
-AC_PROG_CC
-AC_PROG_INSTALL
-dnl AM_PROG_CC_C_O    dnl allows for prog_CPPFLAGS prog-specific flags
-
-dnl directs the libc header files to provide the standard GNU system interfaces including all GNU extensions
-AC_GNU_SOURCE
-
-dnl Libtool (for biomcmc library): in lib/Makefile.am, we include an "abstract" libfoo.la
-AC_PROG_LIBTOOL
-
-dnl openMP: sets $OPENMP_CFLAGS which should be passed to CFLAGS, CPPFLAGS; creates preprocessor macro _OPENMP 
-dnl         (checked with "ifdef _OPENMP"); user can disable it through "--disable-openmp"
-AC_OPENMP
-AC_SUBST(OPENMP_CFLAGS)
-AC_SUBST(OPENMP_CPPFLAGS)
-
-dnl libraries for glib, gtk, etc (pkg-config --cflags --libs) 
-dnl PKG_CHECK_MODULES(GTKDEPS, gtk+-2.0 >= 2.2 glib-2.0 >= 2.2 gthread-2.0)
-dnl AC_SUBST(GTKDEPS_CFLAGS)
-dnl AC_SUBST(GTKDEPS_LIBS)
-PKG_CHECK_MODULES(ARGTABLE2, [argtable2]) 
-dnl AC_CHECK_HEADERS([argtable2.h], [], AC_MSG_ERROR([Could not find argtable2.h. Try $ ./configure CFLAGS='-Iyourpath']))
-dnl AC_CHECK_LIB(argtable2, arg_parse, [], AC_MSG_ERROR([Could not find libargtable2. Try $ ./configure LDFLAGS="-Lyourpath"]))
-AC_SUBST(ARGTABLE2_CFLAGS)
-AC_SUBST(ARGTABLE2_LIBS)
-
-dnl check for the math library
-AC_CHECK_LIB([m],[main])
-
-dnl check for the clock_gettime function in rt library (linking with -lrt if found)
-dnl (preferred way of checking for libraries, over AC_CHECK_LIB...)
-AC_SEARCH_LIBS([clock_gettime],[rt])                                               
-
-dnl Check for the 15 Standard C (ANSI-C/ISO-C) headers
-AC_HEADER_STDC
-
-dnl Check for additional headers 
-AC_CHECK_HEADERS( \
-    unistd.h \
-    sys/time.h \
-    sys/times.h \
-)
-
-dnl will add lines #define SIZEOF_INT to config.h etc.
-AC_CHECK_SIZEOF(int)
-AC_CHECK_SIZEOF(double)
-AC_CHECK_SIZEOF(long long int)
-
-dnl customized for guenomu
-AC_MSG_RESULT([                ===    configuration options specific to guenomu])
-
-AC_MSG_CHECKING([whether to build (slower) debug code])
-AC_ARG_ENABLE([debug],
-    [AS_HELP_STRING([--enable-debug], [enable debugging with gdb and friends (default=no)])],
-    [debugit="$enableval"], [debugit=no])
-AC_MSG_RESULT([$debugit])
-if test x"$debugit" = x"yes"; then
-    AC_DEFINE([BIOMCMC_DEBUG],[],[Debug Mode, with assert()-like error checking])
-    AM_CFLAGS="${AM_CFLAGS} -std=gnu11 -g -W -Wall -Werror -Wno-uninitialized -O0"
-else
-    AM_CFLAGS="${AM_CFLAGS} -std=gnu11 -funroll-loops -fomit-frame-pointer -finline-functions -O4"
-fi
-
-AC_MSG_CHECKING([whether you want static binaries (not the library, but the executables)])
-AC_ARG_ENABLE(static-binary,
-    [  --enable-static-binary  static binaries, that run on same arch without the libraries [[default=no]]],
-    [ statbin_use="yes" ], [ statbin_use=""    ])
-if test -n "${statbin_use}"; then
-    AC_MSG_RESULT([yes])
-    AM_LDFLAGS="-static ${AM_LDFLAGS}";
-else
-    AC_MSG_RESULT([no])
-fi
-
-dnl code below is experimental (just wrote down solutions from the net), I want to compile both serial and parallel
-AC_MSG_CHECKING([whether to build parallel code])
 AC_ARG_ENABLE([mpi],
-    [AS_HELP_STRING([--enable-mpi], [enable parallel code with MPI (default=no)])],
-    [mpiit="yes"], [mpiit=""])
-if test -n "${mpiit}"; then
-    AC_MSG_RESULT([yes])
-dnl cannot use AC_DEFINE, which is global http://openbooks.sourceforge.net/books/wga/creating-configuration.html
-    AC_SUBST(DEF_MPI,[-DBIOMCMC_MPI])
-dnl http://www.gnu.org/software/autoconf-archive/ax_mpi.html says that if the whole program depends on MPI we should use AX_PROG_{CC,CXX,FC}_MPI
-dnl AX_MPI will define MPICC et al as well as MPILIBS 
-    AX_MPI
-    MPI_CXXLIBS=`mpicxx --showme:link`
-    MPI_CXXLIBS="$MPI_CXXLIBS $MPILIBS"
-    MPI_CXXFLAGS=`mpicxx --showme:compile`
-else
-    AC_MSG_RESULT([no])
-    AC_SUBST(DEF_MPI,[])
-    MPI_CXXLIBS=""
-    MPI_CXXFLAGS=""
-    MPICC=$CC
-    AC_SUBST([MPICC])
-fi
+  [AS_HELP_STRING([--enable-mpi], [build with MPI using its C compiler wrapper (default=no)])],
+  [], [enable_mpi=no])
+AS_CASE([$enable_mpi], [yes|no], [], [AC_MSG_ERROR([--enable-mpi expects yes or no])])
+AC_ARG_VAR([MPICC], [MPI C compiler wrapper, e.g. mpicc])
+AS_IF([test "x$enable_mpi" = xyes], [
+  AS_IF([test -z "$MPICC"], [AC_CHECK_PROGS([MPICC], [mpicc mpcc hcc])])
+  AS_IF([test -z "$MPICC"], [AC_MSG_ERROR([MPI requested but no MPI C compiler wrapper was found])])
+  CC=$MPICC
+])
+AM_INIT_AUTOMAKE([foreign -Wall subdir-objects])
+AM_MAINTAINER_MODE([disable])
+AC_USE_SYSTEM_EXTENSIONS
+AC_LANG([C])
+AC_PROG_CC
+AM_PROG_AR
+AC_PROG_INSTALL
+AM_PATH_PYTHON([3.6], [], [:])
+LT_INIT
+AC_OPENMP
+PKG_PROG_PKG_CONFIG
+PKG_CHECK_MODULES([ARGTABLE2], [argtable2])
+AC_SEARCH_LIBS([sqrt], [m])
+AC_SEARCH_LIBS([clock_gettime], [rt])
+AC_CHECK_HEADERS([unistd.h sys/time.h sys/times.h])
+AC_CHECK_SIZEOF([int])
+AC_CHECK_SIZEOF([double])
+AC_CHECK_SIZEOF([long long int])
 
-AC_MSG_RESULT([                ===    end of configuration options specific to guenomu])
+AS_IF([test "x$enable_mpi" = xyes], [
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <mpi.h>]],
+    [[MPI_Init(0, 0); MPI_Finalize();]])], [],
+    [AC_MSG_ERROR([MPI compiler cannot compile and link a C MPI program])])
+  DEF_MPI=-DBIOMCMC_MPI
+], [DEF_MPI=])
+AC_SUBST([DEF_MPI])
+AM_CONDITIONAL([USE_MPI], [test "x$enable_mpi" = xyes])
 
-
-dnl propagate changed vars among final makefiles
+AC_ARG_ENABLE([debug],
+  [AS_HELP_STRING([--enable-debug], [enable runtime checks and debugging flags])], [], [enable_debug=no])
+AS_CASE([$enable_debug], [yes|no], [], [AC_MSG_ERROR([--enable-debug expects yes or no])])
+AM_CFLAGS="-std=gnu11"
+AS_IF([test "x$enable_debug" = xyes], [
+  AC_DEFINE([BIOMCMC_DEBUG], [], [Enable runtime consistency checks])
+  AM_CFLAGS="$AM_CFLAGS -g -O0 -Wall -Wextra"
+])
 AC_SUBST([AM_CFLAGS])
+
+AC_ARG_ENABLE([static-binary],
+  [AS_HELP_STRING([--enable-static-binary], [link executable dependencies statically])], [], [enable_static_binary=no])
+AS_CASE([$enable_static_binary], [yes|no], [], [AC_MSG_ERROR([--enable-static-binary expects yes or no])])
+AS_IF([test "x$enable_static_binary" = xyes], [AM_LDFLAGS=-all-static], [AM_LDFLAGS=])
 AC_SUBST([AM_LDFLAGS])
-AC_SUBST([MPI_CXXLIBS])
-AC_SUBST([MPI_CXXFLAGS])
 
-dnl generate makefiles (last recipes, after defining CFLAGS etc.)
-AC_CONFIG_FILES([ Makefile lib/Makefile src/Makefile src/test/Makefile])
+AC_CONFIG_FILES([Makefile lib/Makefile src/Makefile src/test/Makefile biomcmc_guenomu.pc])
 AC_OUTPUT
-
-echo \
-"---- 
-Configuration parameters for guenomu:
-
- Source code location:   ${srcdir}
- Compiler     (library): ${CC}
- MPI compiler (guenomu): ${MPICC}
- Compiler flags: ${AM_CFLAGS} 
- Linker  flags:  ${AM_LDFLAGS}
- MPI libs:       ${MPI_CXXLIBS}
- MPI flags:      ${MPI_CXXFLAGS}
- Install path:   ${prefix}
-
-----"
-
-dnl EXAMPLE sizeof check
-dnl AC_CHECK_SIZEOF(long)
-dnl EXAMPLE receiving custom variable (like CFLAGS) 
-dnl AC_SUBST(SHARED_FLAGS)
-
+AC_MSG_NOTICE([Guenomu $PACKAGE_VERSION: CC=$CC; MPI=$enable_mpi; debug=$enable_debug; prefix=$prefix])

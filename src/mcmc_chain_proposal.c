@@ -362,7 +362,8 @@ mcmc_update_reconciliation_lambda_prior (mcmc_chain chain)
 #endif
   for (i = chain->mtm->n_tries; i < current; i++) for (j = 0; j < chain->ndist; j++) /* one term for all genes, cannot enter MPI_SUM */
     chain->mtm->lnProb[i] -= chain->run.temperature * (chain->mtm->n_dli[i][j] / chain->model.lambda_hp[j]);
-  chain->mtm->lnProb[i] -= chain->run.temperature * (chain->model.lambda_0[j] / chain->model.lambda_hp[j]); /* current value */
+  for (j = 0; j < chain->ndist; j++) /* current value, once per distance */
+    chain->mtm->lnProb[current] -= chain->run.temperature * (chain->model.lambda_0[j] / chain->model.lambda_hp[j]);
   /* generalized Hastings-Metropolis ratio */
   biomcmc_random_number = chain->ctrl->rng_global;
   if (log (biomcmc_rng_unif_pos ()) < (proposal_ratio + multiple_try_ln_GHM_ratio (chain->mtm))) { /* accept new state */

@@ -66,6 +66,7 @@ new_char_vector_from_file (char *filename)
   }
   fclose (infile);
   if (line) free (line);
+  if (!vec->next_avail) biomcmc_error ("no entries found in file \"%s\"", filename);
 
   for (i = 0; i < vec->nstrings; i++) {
     linelength = strcspn (vec->string[i], "#;"); /* string length until beginning of comments (if any) */
